@@ -6,23 +6,33 @@ class AnnotationRepository:
 
     def __init__(self, directory: str):
         self.directory = directory
-        self.annotation_types = {}
-        for at in os.listdir(os.path.join(self.directory, 'golds')):
-            self.annotation_types[at] = AnnotationTypeRepository(self, at)
+        gold_directories = os.listdir(os.path.join(self.directory, 'golds'))
+        self.categories = { cat: AnnotationTypeRepository(self, cat)
+                            for cat in gold_directories }
 
-    def types(self):
-        return list(sorted(self.annotation_types))
+    def category_names(self):
+        return list(sorted(self.categories))
 
-    def batches_in_type(self, annotation_type):
-        return sorted(self.annotation_types[annotation_type].batches.keys())
+    def types_with_batches_count(self):
+        return [[cat, config.DESCRIPTIONS.get(cat, ''), len(self.batch_names(cat))]
+                for cat in self.category_names()]
+
+    def category(self, category: str):
+        return self.categories[category]
+
+    def batch(self, category, name):
+        return self.categories[category].batches[name]
+
+    def batch_names(self, category):
+        return sorted(self.categories[category].batches.keys())
 
     def files_in_batch(self, annotation_type, batch):
-        return self.annotation_types[annotation_type].files_in_batch(batch)
+        return self.categories[annotation_type].files_in_batch(batch)
 
     def pp(self):
-        for annotation_type in self.annotation_types:
+        for annotation_type in self.categories:
             print(annotation_type)
-            at_repository = self.annotation_types[annotation_type]
+            at_repository = self.categories[annotation_type]
             for batch in at_repository.batches:
                 print(f'    {self.directory}{batch}')
                 for fname in at_repository.files_in_batch(batch):
@@ -44,12 +54,24 @@ class AnnotationTypeRepository:
 
 class AnnotationBatch:
 
-    def __init__(self, repo: AnnotationTypeRepository, batch: str):
-        self.batch = batch
-        self.directory = os.path.join(repo.directory, batch)
+    def __init__(self, repo: AnnotationTypeRepository, name: str):
+        self.name = name
+        self.directory = os.path.join(repo.directory, name)
+        self.annotations_dir = os.path.join(repo.directory, name, 'annotations')
         self.files = [
-            [fname, os.path.getsize(os.path.join(self.directory, fname))]
-            for fname in os.listdir(os.path.join(self.directory))]
+            [fname, os.path.getsize(os.path.join(self.annotations_dir, fname))]
+            for fname in os.listdir(os.path.join(self.annotations_dir))]
+
+    def short_description(self):
+        return self.get_description('description.txt')
+
+    def long_description(self):
+        description = self.get_description('description.md')
+        return self.get_description('description.txt') if not description else description
+
+    def get_description(self, file_name: str):
+        path = os.path.join(self.directory, file_name)
+        return open(path).read() if os.path.exists(path) else ''
 
 
 def file_size(directory, project_name, file_name):

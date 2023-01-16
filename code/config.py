@@ -10,3 +10,7 @@ if 'Documents/git' in current_directory:
 else:
     sources = '/Users/marc/Desktop/projects/clams/code/clamsproject/wgbh-collaboration/'
     annotations = '/Users/marc/Desktop/projects/clams/code/clamsproject/clams-aapb-annotations/'
+
+
+DESCRIPTIONS = { 'ner': 'Named Entities',
+                 'nel': 'Named Entity Links (groundings)' }
