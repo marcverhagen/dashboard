@@ -1,84 +1,183 @@
 import os
+import re
+import json
+from pathlib import Path
+from collections import namedtuple
 import config
 
 
-class AnnotationRepository:
+Comparison = namedtuple('Comparison', ['in_both', 'in_first', 'in_second'])
+
+
+class Repository:
 
     def __init__(self, directory: str):
-        self.directory = directory
-        gold_directories = os.listdir(os.path.join(self.directory, 'golds'))
-        self.categories = { cat: AnnotationTypeRepository(self, cat)
-                            for cat in gold_directories }
+        self.path = Path(directory)
+        self._batches = { p.stem: Batch(p) for p in self.batch_directories() }
+        self._tasks = { p.stem: Task(self, p) for p in self.task_directories() }
 
-    def category_names(self):
-        return list(sorted(self.categories))
+    def __str__(self):
+        return f'<{self.__class__.__name__} {self.directory}>'
 
-    def types_with_batches_count(self):
-        return [[cat, config.DESCRIPTIONS.get(cat, ''), len(self.batch_names(cat))]
-                for cat in self.category_names()]
+    def task_directories(self):
+        # TODO: now depends on there being a golds subdir, should maybe also
+        # look whether there are data drop directories
+        return [ p for p in self.path.iterdir() if Path(p / 'golds').is_dir()]
 
-    def category(self, category: str):
-        return self.categories[category]
+    def task_names(self):
+        return list([task.name for task in self.tasks()])
 
-    def batch(self, category, name):
-        return self.categories[category].batches[name]
+    def task(self, task: str):
+        return self._tasks[task]
 
-    def batch_names(self, category):
-        return sorted(self.categories[category].batches.keys())
+    def tasks(self):
+        return sorted(self._tasks.values())
 
-    def files_in_batch(self, annotation_type, batch):
-        return self.categories[annotation_type].files_in_batch(batch)
+    def batch(self, name: str):
+        return self._batches[name]
+
+    def batch_directories(self):
+        return [p for p in Path(self.path / 'batches').iterdir()]
+
+    def batch_names(self):
+        return sorted(self._batches.keys())
+
+    def batches(self):
+        return sorted(self._batches.values())
+
+    def gold_files(self, task: str):
+        return [p.name for p in repository.task(task).golds]
 
     def pp(self):
-        for annotation_type in self.categories:
-            print(annotation_type)
-            at_repository = self.categories[annotation_type]
-            for batch in at_repository.batches:
-                print(f'    {self.directory}{batch}')
-                for fname in at_repository.files_in_batch(batch):
-                    print(f'        {fname}')
+        print()
+        print(self)
+        print('\nBatches:')
+        for batch in self._batches:
+            print('   ', batch)
+        print('\nTasks:')
+        for task in self._tasks:
+            print('   ', task)
+        print()
 
 
-class AnnotationTypeRepository:
+class Batch:
 
-    def __init__ (self, rep: AnnotationRepository, at):
-        self.annotation_type = at
-        self.directory = os.path.join(rep.directory, 'golds', at)
-        self.batches = {}
-        for batch in os.listdir(self.directory):
-            self.batches[batch] = AnnotationBatch(self, batch)
+    def __init__(self, path: Path):
+        self.name = path.stem
+        self.directory = path
+        self.files = []
+        with open(path) as fh:
+            lines = fh.readlines()
+            for line in lines:
+                line = line.strip()
+                if not line.startswith('#'):
+                    self.files.append(line)
+            self.content = ''.join(lines)
 
-    def files_in_batch(self, batch):
-        return self.batches[batch].files
+    def __len__(self):
+        return len(self.files)
 
+    def __eq__(self, other):
+        return self.name == other.name
 
-class AnnotationBatch:
+    def __lt__(self, other):
+        return self.name < other.name
 
-    def __init__(self, repo: AnnotationTypeRepository, name: str):
-        self.name = name
-        self.directory = os.path.join(repo.directory, name)
-        self.annotations_dir = os.path.join(repo.directory, name, 'annotations')
-        self.files = [
-            [fname, os.path.getsize(os.path.join(self.annotations_dir, fname))]
-            for fname in os.listdir(os.path.join(self.annotations_dir))]
-
-    def short_description(self):
-        return self.get_description('description.txt')
-
-    def long_description(self):
-        description = self.get_description('description.md')
-        return self.get_description('description.txt') if not description else description
-
-    def get_description(self, file_name: str):
-        path = os.path.join(self.directory, file_name)
-        return open(path).read() if os.path.exists(path) else ''
+    def __str__(self):
+        return f'<{self.__class__.__name__} {self.name} files={len(self)}>'
 
 
-def file_size(directory, project_name, file_name):
-    path = os.path.join(directory, project_name, file_name)
-    # We could use "f'{os.path.getsize(path):,}'", but then the column will be
-    # left aligned, which we may or may not be able to fix with a pandas Styler
-    return os.path.getsize(path)
+class Task:
+
+    def __init__ (self, rep: Repository, path: Path):
+        self.name = path.name
+        self.task_directory = path
+        self.gold_directory = Path(path / 'golds')
+        self.golds = [f for f in self.gold_directory.iterdir()]
+        self.readme_file = Path(path / 'readme.md')
+        self.readme = self.readme_content()
+        self.process_file = Path(path / 'process.py')
+        self.process = self.process_content()
+        self.data_drops = {}
+        for subdir in self.task_directory.iterdir():
+            if subdir.is_dir() and re.match(r'\d{6}', subdir.name):
+                self.data_drops[subdir.name] = DataDrop(subdir)
+
+    def __len__(self):
+        return len(self.golds)
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __lt__(self, other):
+        return self.name < other.name
+
+    def __str__(self):
+        return f'<{self.__class__.__name__} {self.name} size={len(self)}>'
+
+    def readme_content(self):
+        if self.readme_file.is_file():
+            with self.readme_file.open() as fh:
+                return fh.read()
+        return ''
+
+    def process_content(self):
+        if self.process_file.is_file():
+            with self.process_file.open() as fh:
+                return fh.read()
+        return ''
+
+    def gold_file_ids(self):
+        return [f.stem for f in self.golds]
+
+    def data_drop(self, data_drop: str):
+        return self.data_drops.get(data_drop)
+
+    def gold_content(self, gold_file):
+        if gold_file is None:
+            return ''
+        gold_path = Path(self.gold_directory / gold_file)
+        with open(gold_path) as fh:
+            return fh.read()
+
+    def compare_to_batch(self, batch: Batch):
+        gold_files = set(self.gold_file_ids())
+        batch_files = set(batch.files)
+        return Comparison(
+            len(gold_files.intersection(batch_files)),
+            len(gold_files.difference(batch_files)),
+            len(batch_files.difference(gold_files)))
 
 
-annotations = AnnotationRepository(config.annotations)
+class DataDrop:
+
+    def __init__(self, path: Path):
+        self.name = path.name
+        self.path = path
+        self.files = list([f for f in self.path.iterdir()])
+        self.file_names = [f.name for f in self.files]
+
+    def __len__(self):
+        return len(self.files)
+
+    def __str__(self):
+        return f'<{self.__class__.__name__} {self.name} files={len(self)}>'
+
+    def file_content(self, filename: str):
+        path = Path(self.path / filename)
+        if path.suffix == '.json':
+            return json.dumps(json.load(path.open()), indent=2)
+        with path.open() as fh:
+            return fh.read()
+
+
+class DataDropFile:
+
+    def __init__(self, path):
+        pass
+
+
+
+repository = Repository(config.ANNOTATIONS)
+
+#repository.pp()
