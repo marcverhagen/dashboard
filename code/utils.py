@@ -1,28 +1,85 @@
 import os
+import json
+from pathlib import Path
+from random import choice
+from string import ascii_uppercase
 
-import pandas as pd
-import streamlit as st
-import config
+# import pandas as pd
+# import streamlit as st
 
 
-def write_task_data():
-    # just some simple placeholder code for now
-    with open('create_system_output.txt', 'w') as fh:
-        fh.write(config.sources)
-        fh.write(config.annotations)
 
-def print_overview():
-    st.title('CLAMS Dashboards')
-    st.markdown('### Annotation Viewer')
-    st.image('../docs/workflows/dashboard-annotations.png')
-    st.markdown('### Evaluation Dashboard')
-    st.image('../docs/workflows/dashboard-evaluation.png')
+class Directory:
 
-def file_size(directory, project_name, file_name):
-    path = os.path.join(directory, project_name, file_name)
-    # We could use f'{os.path.getsize(path):,}', but then the column will be
-    # left aligned, which we may or may not be able to fix with a pandas Styler
-    return os.path.getsize(path)
+    """Abstract class which provides some intialization, sorting and other common
+    functionality for classes from the annotation and evaluation modules."""
+
+    def __init__(self, path: Path):
+        self.name = path.stem
+        self.path = path
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __lt__(self, other):
+        return self.name < other.name
+
+    def __str__(self):
+        return f'<{self.__class__.__name__} {self.name}>'
+
+
+def st_list_files(component, header: str, file_names: list, cutoff: int = 5):
+    """Display a list of file names in a Streamlit component, returns a selectbox
+    or a list of radio buttons, depending on how long the list is."""
+    file_names = list(file_names)
+    if len(file_names) > cutoff:
+        return component.selectbox(
+            header, file_names, label_visibility='collapsed')
+    else:
+        return component.radio(
+            header, file_names, label_visibility='collapsed', format_func=identity)
+
+
+def st_list_files2(component, task, cutoff: int = 5):
+    """Display a list of file names in a Streamlit component, returns a selectbox
+    or a list of radio buttons, depending on how long the list is. The difference
+    with st_list_files() is that less assumptions are made on the golds directory
+    structure."""
+    amended_fnames = []
+    # using this to determine what part of the path is needed
+    dir_parts = task.gold_directory.parts
+    for fname in task.gold_files:
+        amended_fnames.append(os.sep.join(fname.parts[len(dir_parts):]))
+    if len(amended_fnames) > cutoff:
+        return component.selectbox(
+            'file-list', amended_fnames, label_visibility='collapsed')
+    else:
+        return component.radio(
+            'file-list', amended_fnames, label_visibility='collapsed', format_func=identity)
+
+
+def st_display_file(component, path: Path):
+    """Display the content of a file path to a Streamlit component."""
+    content = read_file(path)
+    if path.name.endswith('.mmif') or path.name.endswith('.json'):
+        content = json.dumps(json.loads(content), indent=2)
+    component.text(content)
+
+
+def read_file(filepath: Path):
+    if filepath.is_file():
+        with filepath.open() as fh:
+            return fh.read()
+    return ''
+
+
+def identity(text: str):
+    return text.replace('@', ' ⟹ ')
+
+
+def random_string(length: int = 5):
+    return ''.join(choice(ascii_uppercase) for i in range(length))
+
 
 
 # Style to supress printing the first column of a table
