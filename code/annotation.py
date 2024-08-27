@@ -1,8 +1,11 @@
+
 import os
 import re
 import json
 from pathlib import Path
 from collections import namedtuple
+
+from git import Repo
 
 import utils
 import config
@@ -15,41 +18,54 @@ class Repository:
 
     def __init__(self, directory: str):
         self.path = Path(directory)
+        self.repo = Repo(directory)
         self.readme = Path(self.path / 'README.md').open().read()
-        self._batches = { p.stem: Batch(p) for p in self.batch_directories() }
+        self._batches = { p.stem: Batch(p) for p in self.batch_files }
         self._tasks = { p.stem: Task(self, p) for p in self.task_directories() }
+        self._branch_names = [ str(branch) for branch in self.repo.branches ]
+        self._branches = { str(branch): branch for branch in self.repo.branches }
 
     def __str__(self):
         return f'<{self.__class__.__name__} {self.path}>'
 
-    def task_directories(self):
-        # TODO: now depends on there being a golds subdir, should maybe also
-        # look whether there are data drop directories
-        return [ p for p in self.path.iterdir() if Path(p / 'golds').is_dir()]
+    @property
+    def tasks(self):
+        return sorted(self._tasks.values())
 
+    @property
     def task_names(self):
-        return list([task.name for task in self.tasks()])
+        return list([task.name for task in self.tasks])
+
+    @property
+    def batches(self):
+        return sorted(self._batches.values())
+
+    @property
+    def batch_names(self):
+        return sorted(self._batches.keys())
+
+    @property
+    def batch_files(self):
+        return [p for p in Path(self.path / 'batches').iterdir()]
+
+    @property
+    def branches(self):
+      return self._branches
+
+    @property
+    def branch_names(self):
+        return self._branch_names
+   
+    def task_directories(self):
+        # TODO: now depends on there being a golds sub directory, should perhaps
+        # instead check presence of readme and process.py files.
+        return [ p for p in self.path.iterdir() if Path(p / 'golds').is_dir()]
 
     def task(self, task: str):
         return self._tasks[task]
 
-    def tasks(self):
-        return sorted(self._tasks.values())
-
     def batch(self, name: str):
         return self._batches[name]
-
-    def batch_directories(self):
-        return [p for p in Path(self.path / 'batches').iterdir()]
-
-    def batch_names(self):
-        return sorted(self._batches.keys())
-
-    def batches(self):
-        return sorted(self._batches.values())
-
-    def gold_files(self, task: str):
-        return [p.name for p in self.task(task).gold_files]
 
     def pp(self):
         print()
@@ -63,7 +79,7 @@ class Repository:
         print()
 
 
-class Batch(utils.Directory):
+class Batch(utils.FileSystemNode):
 
     def __init__(self, path: Path):
         super().__init__(path)
@@ -76,8 +92,11 @@ class Batch(utils.Directory):
     def __len__(self):
         return len(self.files)
 
+    def pp(self):
+        print(f'\n{b}\n\n{b.content[:500]}\n')
 
-class Task(utils.Directory):
+
+class Task(utils.FileSystemNode):
 
     def __init__ (self, rep: Repository, path: Path):
         super().__init__(path)
@@ -107,12 +126,13 @@ class Task(utils.Directory):
     def gold_files(self):
         if self._gold_files is None:
             self._gold_files = []
-            for path in sorted(self._gold_directory.iterdir()):
-                if path.is_file():
-                    self._gold_files.append(path)
-                else:
-                    for subpath in sorted(path.iterdir()):
-                        self._gold_files.append(subpath)
+            if self._gold_directory.is_dir():
+                for path in sorted(self._gold_directory.iterdir()):
+                    if path.is_file():
+                        self._gold_files.append(path)
+                    else:
+                        for subpath in sorted(path.iterdir()):
+                            self._gold_files.append(subpath)
         return self._gold_files
     
     def process_content(self):
@@ -143,7 +163,7 @@ class Task(utils.Directory):
             len(batch_files.difference(gold_files)))
 
 
-class DataDrop(utils.Directory):
+class DataDrop(utils.FileSystemNode):
 
     def __init__(self, path: Path):
         super().__init__(path)
@@ -168,8 +188,14 @@ class DataDrop(utils.Directory):
 if __name__ == '__main__':
 
     repo = Repository(config.ANNOTATIONS)
-    print(repo)
-    for task in (repo.task('scene-recognition'), repo.task('newshour-chyron')):
-        print(f'\n{task}\n')
-        for p in task.gold_files:
-            print(p)
+
+    #task_names =  ('scene-recognition', 'newshour-chyron')
+    #for task in [repo.task(name) for name in task_names]:
+    #    print(f'\n{task}\n')
+    #    for p in task.gold_files:
+    #        print(p)
+    
+    for b in repo.batches:
+        b.pp()
+
+    print(repo.task_directories())

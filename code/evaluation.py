@@ -1,20 +1,3 @@
-"""CLAMS Evaluation
-
-Placeholder for top-level evaluation code.
-
-For now just a viewer of the evaluation repository.
-
-Other modules needed:
-
-- evaluation measures
-- data handling
-- hooks to visualization (submodule or pip install?)
-- hooks to pipeline runner
-
-There is a good case to be made to have some of these as part of a mmif-utils
-package.
-
-"""
 
 from pathlib import Path
 import utils
@@ -39,7 +22,7 @@ class Repository:
         return sorted(self._evaluations.values())
 
 
-class Evaluation(utils.Directory):
+class Evaluation(utils.FileSystemNode):
 
     def __init__(self, path: Path):
         super().__init__(path)
@@ -63,7 +46,7 @@ class Evaluation(utils.Directory):
             + f'code files {[f.stem for f in self.code_files]}')
 
 
-class Predictions(utils.Directory):
+class Predictions(utils.FileSystemNode):
 
     """Class to wrap a directory with predictions. Each prediction is a MMIF file
     with processing results."""

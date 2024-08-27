@@ -9,10 +9,10 @@ from string import ascii_uppercase
 
 
 
-class Directory:
+class FileSystemNode:
 
     """Abstract class which provides some intialization, sorting and other common
-    functionality for classes from the annotation and evaluation modules."""
+    functionality for path-like classes from the annotation and evaluation modules."""
 
     def __init__(self, path: Path):
         self.name = path.stem
@@ -79,6 +79,13 @@ def identity(text: str):
 
 def random_string(length: int = 5):
     return ''.join(choice(ascii_uppercase) for i in range(length))
+
+
+def get_index(haystack: list, needle: str):
+    try:
+        return haystack.index(needle)
+    except ValueError:
+        return 0
 
 
 
