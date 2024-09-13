@@ -74,7 +74,7 @@ class Repository:
 
     def checkout(self, branch: str):
         self.branches[branch].checkout()
-        self.populate()
+        self.load()
 
     def pp(self):
         print(f'\n{self}')
