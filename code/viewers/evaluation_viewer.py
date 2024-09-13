@@ -3,7 +3,7 @@ import utils
 import config
 
 
-def view(EVALUATIONS):
+def viewer(EVALUATIONS):
 
     st.title('CLAMS Evaluation Viewer')
     navigation_col, eval_col = st.columns([0.2, 0.8])

@@ -8,12 +8,18 @@ Experiments with a CLAMS dashboard, starting with an annotation viewer and an ev
 Install the necessary Python modules:
 
 ```shell
+pip install streamlit==1.34.0
+pip install directory-tree==1.0.0
+```
+
+Or use the requirements file:
+
+```shell
 pip install -f requirements.txt
 ```
 
-Basically, this install the streamlit module.
  
-The dashboard expect access to a couple of repositories, you should get a local copy of them:
+The dashboard expects access to a couple of repositories, you should get a local copy of them:
 
 <!--
 <img src="docs/workflows/dashboard-annotations.png" width=500>

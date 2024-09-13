@@ -5,11 +5,22 @@ Top-level application code.
 To run this:
 
 $ streamlit run app.py
-$ streamlit run app.py -- debug
+$ streamlit run app.py -- OPTION+
 
-The second invocation runs the appliation in debug mode, meaning the annotation
-and evaluation repositories are updated when the code restarts. It also allows
-printing to the standard output if used.
+The second invocation is meant to send options to the application. We have the
+following options:
+
+debug
+    This for when the appliation runs in debug mode, that is, when you select
+    "Always rerun" after a code update. These reruns do not impact the session
+    state I think which causes some code updates to not be reflected in the new
+    interface, with the debug option annotations and evaluations will be reloaded.
+
+no-checkout
+    Do not checkout a branch in the annotation/evaluation repository. This is
+    useful when experimenting with the code on changes in the repositories that
+    were not committed. Also, when your annotation/evaluation repository has 
+    local changes then checkout will fail.
 
 """
 
@@ -24,8 +35,8 @@ import utils
 import config
 import annotation
 import evaluation
-from viewers.annotation_viewer import view as annotation_viewer
-from viewers.evaluation_viewer import view as evaluation_viewer
+from viewers.annotation_viewer import viewer as annotation_viewer
+from viewers.evaluation_viewer import viewer as evaluation_viewer
 
 
 # No debugging by default, this can be overwritten by handing an argument to the
@@ -34,6 +45,9 @@ DEBUG = False
 if 'debug' in sys.argv[1:]:
     DEBUG = True
 
+CHECKOUT = True
+if 'no-checkout' in sys.argv[1:]:
+    CHECKOUT = False
 
 if 'ANNOTATIONS' not in st.session_state:
     st.session_state['ANNOTATIONS'] = annotation.Repository(config.ANNOTATIONS)
@@ -86,7 +100,7 @@ if dashboard == 'Overview':
 
 elif dashboard == 'Annotation viewer':
 
-    annotation_viewer(ANNOTATIONS)
+    annotation_viewer(ANNOTATIONS, CHECKOUT)
 
 elif dashboard == 'Evaluation viewer':
 

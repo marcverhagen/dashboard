@@ -45,6 +45,7 @@ def st_list_files2(component, task, cutoff: int = 5):
     or a list of radio buttons, depending on how long the list is. The difference
     with st_list_files() is that less assumptions are made on the golds directory
     structure."""
+    # TODO: having these two functions is confusing, clean this up
     amended_fnames = []
     # using this to determine what part of the path is needed
     dir_parts = task.gold_directory.parts
@@ -64,6 +65,14 @@ def st_display_file(component, path: Path):
     if path.name.endswith('.mmif') or path.name.endswith('.json'):
         content = json.dumps(json.loads(content), indent=2)
     component.text(content)
+
+
+def st_display_branch(component, ANNOTATIONS):
+    """Display all available branches in a selectbox. Return the selectbox and the
+    branches."""
+    branch_names = ANNOTATIONS.branch_names
+    index = get_index(branch_names, 'main')
+    return component.selectbox('Branch in repository:', branch_names, index=index)
 
 
 def read_file(filepath: Path):

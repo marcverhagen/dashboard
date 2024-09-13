@@ -2,6 +2,7 @@
 import os
 import re
 import json
+from io import StringIO
 from pathlib import Path
 from collections import namedtuple
 
@@ -19,14 +20,18 @@ class Repository:
     def __init__(self, directory: str):
         self.path = Path(directory)
         self.repo = Repo(directory)
+        self.load()
+
+    def __str__(self):
+        return f'<{self.__class__.__name__} "{self.path}">'
+
+    def load(self):
+        """Load repository data."""
         self.readme = Path(self.path / 'README.md').open().read()
         self._batches = { p.stem: Batch(p) for p in self.batch_files }
         self._tasks = { p.stem: Task(self, p) for p in self.task_directories() }
         self._branch_names = [ str(branch) for branch in self.repo.branches ]
         self._branches = { str(branch): branch for branch in self.repo.branches }
-
-    def __str__(self):
-        return f'<{self.__class__.__name__} {self.path}>'
 
     @property
     def tasks(self):
@@ -67,9 +72,13 @@ class Repository:
     def batch(self, name: str):
         return self._batches[name]
 
+    def checkout(self, branch: str):
+        self.branches[branch].checkout()
+        self.populate()
+
     def pp(self):
-        print()
-        print(self)
+        print(f'\n{self}')
+        print(f'\nActive branch:\n    {self.repo.active_branch}')
         print('\nBatches:')
         for batch in self._batches:
             print('   ', batch)
@@ -88,9 +97,32 @@ class Batch(utils.FileSystemNode):
             lines = fh.readlines()
             self.files = [l.strip() for l in lines if not l.strip().startswith('#')]
             self.content = ''.join(lines)
+        self._comment = None
 
     def __len__(self):
         return len(self.files)
+
+    @property
+    def comment(self):
+        if self._comment is None:
+            comment = StringIO()
+            separator_count = 0
+            lines = self.content.split('\n')
+            for line in lines:
+                if '-' * 50 in line:
+                    separator_count += 1
+                    if separator_count == 2:
+                        break
+                    else:
+                        continue
+                if not line.startswith('#'):
+                    break
+                line = line.lstrip('#').strip()
+                line = '\n' if not line else line
+                comment.write(f'{line}\n')
+            self._comment = comment.getvalue()
+            #print(f'COMMENT:\n{self._comment}<<<')
+        return self._comment
 
     def pp(self):
         print(f'\n{b}\n\n{b.content[:500]}\n')
@@ -113,7 +145,7 @@ class Task(utils.FileSystemNode):
                 self.data_drops[subdir.name] = DataDrop(subdir)
 
     def __str__(self):
-        return f'<Task {self.path}>'
+        return f'<Task "{self.path}">'
 
     def __len__(self):
         return len(self.gold_files)
@@ -184,18 +216,20 @@ class DataDrop(utils.FileSystemNode):
             return fh.read()
 
 
+def test_print_gold_files():
+    task_names =  ('scene-recognition', 'newshour-chyron')
+    for task in [repo.task(name) for name in task_names]:
+        print(f'\n{task}\n')
+        for p in task.gold_files:
+            print(p)
+
+
 
 if __name__ == '__main__':
 
     repo = Repository(config.ANNOTATIONS)
+    repo.checkout('85-timeframes')
+    repo.pp()
 
-    #task_names =  ('scene-recognition', 'newshour-chyron')
-    #for task in [repo.task(name) for name in task_names]:
-    #    print(f'\n{task}\n')
-    #    for p in task.gold_files:
-    #        print(p)
-    
-    for b in repo.batches:
-        b.pp()
-
-    print(repo.task_directories())
+    task = repo.task('scene-recognition')
+    print(task)
