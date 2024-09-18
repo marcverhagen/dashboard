@@ -1,11 +1,15 @@
-import streamlit as st
+
 import pandas as pd
+import streamlit as st
 from directory_tree import DisplayTree
 
 import utils
 
 
-def viewer(ANNOTATIONS, CHECKOUT):
+def viewer(MODEL, CHECKOUT):
+
+    ANNOTATIONS = MODEL.annotations
+    EVALUATIONS = MODEL.evaluations
 
     st.title('CLAMS Annotation Viewer')
 
@@ -94,8 +98,17 @@ def viewer(ANNOTATIONS, CHECKOUT):
             data_col.info(f'Batch "{batch}" with {len(ANNOTATIONS.batch(batch).files)} files')
             data_col.info(f'{ANNOTATIONS.batch(batch).comment}')
 
-            files_tab, content_tab, task_tab = \
-                data_col.tabs(['File identifiers', 'Full batch file content', 'Annotation tasks'])
+            files_tab, content_tab, task_tab, preds_tab = \
+                data_col.tabs(
+                    ['File identifiers', 'Full batch file content',
+                     'Annotation tasks', 'Use in evaluations'])
+
+            with files_tab:
+                files_tab.text('\n'.join(ANNOTATIONS.batch(batch).files))
+
+            with content_tab:
+                content_tab.markdown('##### Batch file content with file identifiers')
+                content_tab.text(ANNOTATIONS.batch(batch).content)
 
             with task_tab:
                 task_tab.markdown('##### Batch usage by annotation tasks')
@@ -108,9 +121,14 @@ def viewer(ANNOTATIONS, CHECKOUT):
                 columns = ['task name', 'overlap', 'task size']
                 task_tab.table(pd.DataFrame(data, columns=columns))
 
-            with files_tab:
-                files_tab.text('\n'.join(ANNOTATIONS.batch(batch).files))
+            with preds_tab:
+                preds_tab.markdown('##### Batch usage in evaluation repository')
+                preds_tab.markdown('Usage in system predictions:')
+                preds_tab.table(
+                    pd.DataFrame(MODEL.batch_usage_in_system_predictions(batch),
+                                 columns=['evaluation', 'system predictions']))
+                preds_tab.markdown('Usage in system reports:')
+                preds_tab.table(
+                    pd.DataFrame(MODEL.batch_usage_in_system_reports(batch),
+                                 columns=['evaluation', 'system report']))
 
-            with content_tab:
-                content_tab.markdown('##### Batch file content with file identifiers')
-                content_tab.text(ANNOTATIONS.batch(batch).content)

@@ -26,15 +26,13 @@ no-checkout
 
 import json
 import sys
-from pathlib import Path
 
-import streamlit as st
 import pandas as pd
+import streamlit as st
 
-import utils
 import config
-import annotation
-import evaluation
+import model
+import utils
 from viewers.annotation_viewer import viewer as annotation_viewer
 from viewers.evaluation_viewer import viewer as evaluation_viewer
 
@@ -49,16 +47,15 @@ CHECKOUT = True
 if 'no-checkout' in sys.argv[1:]:
     CHECKOUT = False
 
-if 'ANNOTATIONS' not in st.session_state:
-    st.session_state['ANNOTATIONS'] = annotation.Repository(config.ANNOTATIONS)
-    st.session_state['EVALUATIONS'] = evaluation.Repository(config.EVALUATIONS)
-ANNOTATIONS = st.session_state['ANNOTATIONS']
-EVALUATIONS = st.session_state['EVALUATIONS']
+if 'MODEL' not in st.session_state:
+    st.session_state['MODEL'] = model.Data(config.ANNOTATIONS,config.EVALUATIONS)
+MODEL = st.session_state['MODEL']
 
 # Without this, updates to Repository code will not be available on restarts.
+# TODO: this makes no sense, is this still needed?
 if DEBUG:
-    ANNOTATIONS = annotation.Repository(config.ANNOTATIONS)
-    EVALUATIONS = evaluation.Repository(config.EVALUATIONS)
+    MODEL = st.session_state['MODEL']
+
 
 
 def debug(text: str):
@@ -100,8 +97,8 @@ if dashboard == 'Overview':
 
 elif dashboard == 'Annotation viewer':
 
-    annotation_viewer(ANNOTATIONS, CHECKOUT)
+    annotation_viewer(MODEL, CHECKOUT)
 
 elif dashboard == 'Evaluation viewer':
 
-    evaluation_viewer(EVALUATIONS)
+    evaluation_viewer(MODEL)

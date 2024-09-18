@@ -17,13 +17,15 @@ Comparison = namedtuple('Comparison', ['in_both', 'in_first', 'in_second'])
 
 class Repository:
 
+    """Class to give access to data in the annotation repository."""
+
     def __init__(self, directory: str):
         self.path = Path(directory)
         self.repo = Repo(directory)
         self.load()
 
     def __str__(self):
-        return f'<{self.__class__.__name__} "{self.path}">'
+        return f'<{self.__class__.__name__} "{self.path.name}">'
 
     def load(self):
         """Load repository data."""

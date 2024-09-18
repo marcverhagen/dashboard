@@ -3,13 +3,16 @@ import utils
 import config
 
 
-def viewer(EVALUATIONS):
+def viewer(MODEL):
+
+    ANNOTATIONS = MODEL.annotations
+    EVALUATIONS = MODEL.evaluations
 
     st.title('CLAMS Evaluation Viewer')
     navigation_col, eval_col = st.columns([0.2, 0.8])
 
     eval_name = navigation_col.radio(
-        'eval-category', EVALUATIONS.evaluation_names(), label_visibility='collapsed')
+        'eval-category', EVALUATIONS.evaluation_names, label_visibility='collapsed')
     evaluation = EVALUATIONS.evaluation(eval_name)
 
     eval_col.info(
@@ -24,14 +27,14 @@ def viewer(EVALUATIONS):
         readme_tab.markdown(evaluation.readme)
     
     with code_tab:
-        code_file_names = [f.name for f in evaluation.code_files]
+        code_file_names = [f.name for f in evaluation.scripts]
         code_file = code_tab.radio(
             'code_file', code_file_names, label_visibility='collapsed')
         code_tab.code(utils.read_file(evaluation.path / code_file))
 
     with predictions_tab:
         prediction = utils.st_list_files(
-            predictions_tab, 'prediction', evaluation.predictions.keys())
+            predictions_tab, 'prediction', evaluation.prediction_names)
         if prediction is not None:
             prediction_obj = evaluation.prediction(prediction)
             predictions_tab.markdown('##### Readme file')
@@ -56,4 +59,5 @@ def viewer(EVALUATIONS):
         report = utils.st_list_files(
             reports_tab, 'report', evaluation.reports.keys())
         if report is not None:
+            # TODO: could now use the Report object for this
             reports_tab.markdown(utils.read_file(evaluation.path / report))
