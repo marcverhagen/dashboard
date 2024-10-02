@@ -15,8 +15,9 @@ class FileSystemNode:
     functionality for path-like classes from the annotation and evaluation modules."""
 
     def __init__(self, path: Path):
-        self.name = path.name
         self.path = path
+        self.name = path.name
+        self.stem = path.stem
 
     def __eq__(self, other):
         return self.name == other.name
