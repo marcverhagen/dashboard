@@ -3,6 +3,8 @@ from pathlib import Path
 import config
 import utils
 
+from git import Repo
+
 
 class Repository(utils.FileSystemNode):
 
@@ -10,6 +12,8 @@ class Repository(utils.FileSystemNode):
 
     def __init__(self, directory: str):
         super().__init__(Path(directory))
+        self.repo = Repo(directory)
+        self.readme = Path(self.path / 'README.md').open().read()
         self.evaluations_idx = { p.stem: Evaluation(p) for p in self.eval_directories() }
         self.evaluations = sorted(self.evaluations_idx.values())
         self.evaluation_names = sorted(self.evaluations_idx.keys())

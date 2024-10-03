@@ -14,7 +14,7 @@ import pathlib
 
 import config
 import model
-from utils import identity
+from utils import identity, read_file
 
 
 DEBUG = False
@@ -24,10 +24,14 @@ MODEL = model.Data(config.ANNOTATIONS, config.EVALUATIONS)
 ANNOTATIONS = MODEL.annotations
 EVALUATIONS = MODEL.evaluations
 
-
 ANNOTATIONS_REPO_URL = 'https://github.com/clamsproject/aapb-annotations'
 EVALUATIONS_REPO_URL = 'https://github.com/clamsproject/aapb-evaluations'
 DASHBOARD_REPO_URL = 'https://github.com/clamsproject/dashboard'
+
+ANNOTATIONS_COMMIT = ANNOTATIONS.repo.head.commit.hexsha
+EVALUATIONS_COMMIT = EVALUATIONS.repo.head.commit.hexsha
+ANNOTATIONS_TREE = f'{ANNOTATIONS_REPO_URL}/tree/{ANNOTATIONS_COMMIT}'
+EVALUATIONS_TREE = f'{EVALUATIONS_REPO_URL}/tree/{EVALUATIONS_COMMIT}'
 
 
 # Top-level directory structure
@@ -35,7 +39,6 @@ ANNOTATIONS_DIR = 'annotations'
 TASKS_DIR = 'annotations/tasks'
 BATCHES_DIR = 'annotations/batches'
 EVALUATIONS_DIR = 'evaluations'
-
 
 # Navigation structure. This contains mappings from pages in directories to pages
 # higher up in the hierarchy.
@@ -66,6 +69,18 @@ NAVIGATION = {
             [('Dashboard', '../../../index.md'),
              ('Annotations', '../../index.md'),
              ('Batches', '../index.md')],
+        'evaluations':
+            [('Dashboard Home', '../index.md'),
+             ('Evaluation Viewer', 'index.md')],
+        'evaluations/evaluation':
+            [('Dashboard Home', '../../index.md'),
+             ('Evaluation Viewer', '../index.md'),
+             ('Evaluations', '../list.md')],
+        'evaluations/evaluation/predictions':
+            [('Dashboard', '../../../index.md'),
+             ('Viewer', '../../index.md'),
+             ('Evaluations', '../../list.md'),
+             ('Evaluation', '../index.md')],
     },
     'SUBPAGES': {
         'annotations':
@@ -92,7 +107,22 @@ NAVIGATION = {
              ('files', 'files.md'),
              ('content', 'content.md'),
              ('tasks', 'tasks.md'),
-             ('use in evaluation', 'evaluation.md')]
+             ('use in evaluation', 'evaluation.md')],
+        'evaluations':
+            [('repository readme', 'readme.md'),
+             ('evaluations', 'list.md')],
+        'evaluations/evaluation':
+            [('evaluation', 'index.md'),
+             ('readme', 'readme.md'),
+             ('code', 'code.md'),
+             ('predictions', 'predictions/index.md'),
+             ('reports', 'reports/index.md')],
+        'evaluations/evaluation/predictions':
+            [('evaluation', '../index.md'),
+             ('readme', '../readme.md'),
+             ('code', '../code.md'),
+             ('predictions', '../predictions/index.md'),
+             ('reports', '../reports/index.md')],
     }
 }
 
@@ -120,11 +150,12 @@ def debug(text: str):
         print(f'DEBUG: {text}')
 
 
-
 class SiteBuilder():
 
     def __init__(self, directory: str):
         self.path = pathlib.Path(directory)
+        # TODO: since the commits are now stored in module variables these two
+        # should be retired
         self.commit_sha = ANNOTATIONS.repo.head.commit.hexsha
         self.commit_short_sha = ANNOTATIONS.repo.git.rev_parse(self.commit_sha, short=8)
 
@@ -144,6 +175,13 @@ class SiteBuilder():
         for directory in dirs:
             full_path = self.path / directory
             full_path.mkdir(parents=True, exist_ok=True)
+        for evaluation in EVALUATIONS:
+            paths = [
+                self.path / 'evaluations' / evaluation.name,
+                self.path / 'evaluations' / evaluation.name / 'predictions',
+                self.path / 'evaluations' / evaluation.name / 'reports']
+            for path in paths:
+                path.mkdir(parents=True, exist_ok=True)
 
     def index(self):
         # Building /index.md
@@ -418,11 +456,116 @@ class SiteBuilder():
                 pb.write('*None*\n\n')
 
     def evaluations(self):
-        # Building /evaluations/
+        # Building /evaluations/index.md
+        # Building /evaluations/{evaluation.name}/
+        self.evaluations_index()
+        self.evaluations_readme()
+        self.evaluations_list()
+        for evaluation in EVALUATIONS:
+            self.evaluation_index(evaluation)
+            self.evaluation_readme(evaluation)
+            self.evaluation_code(evaluation)
+            self.evaluation_predictions(evaluation)
+            self.evaluation_reports(evaluation)
+
+    def evaluations_index(self):
+        # Building /evaluations/index.md
         with PageBuilder(self.path / 'evaluations' / 'index.md') as pb:
-            pb.header('CLAMS Evaluation Viewer')
+            pb.header('Evaluation Viewer')
             pb.navigation(
-                [('Dashboard Home', '../index.md'), ('Evaluation Viewer', None)])
+                breadcrumbs('evaluations', 'Evaluation Viewer'),
+                subpages('evaluations'))
+            pb.p(f'The Evaluation Viewer gives a user-friendly peek into [the GitHub '
+                 f'evaluation repository]({EVALUATIONS_REPO_URL}).')
+
+    def evaluations_readme(self):
+        # Building /evaluations/readme.md
+        with PageBuilder(self.path / 'evaluations' / 'readme.md') as pb:
+            pb.header('Evaluation Viewer', 'Repository Readme File')
+            pb.navigation(
+                breadcrumbs('evaluations'),
+                subpages('evaluations', 'repository readme'))
+            pb.write(EVALUATIONS.readme)
+
+    def evaluations_list(self):
+        # Building /evaluations/list.md
+        with PageBuilder(self.path / 'evaluations' / 'list.md') as pb:
+            pb.header('Evaluation Viewer', 'List of evaluations')
+            pb.navigation(
+                breadcrumbs('evaluations'),
+                subpages('evaluations', 'evaluations'))
+            pb.table_header('Evaluation', 'Predictions', 'Reports', align='lrr')
+            for evaluation in EVALUATIONS:
+                pb.table_row([
+                    f'[{evaluation.name}]({evaluation.name}/index.md)',
+                    len(evaluation.predictions),
+                    len(evaluation.reports)])
+
+    def evaluation_index(self, evaluation):
+        # Building /evaluations/{evaluation.name}/index.md
+        path = self.path / 'evaluations' / evaluation.name / 'index.md'
+        with PageBuilder(path) as pb:
+            pb.header('Evaluation', evaluation.name)
+            pb.navigation(
+                breadcrumbs('evaluations/evaluation'),
+                subpages('evaluations/evaluation', 'evaluation'))
+            pb.p(f'Evaluation **{evaluation.name}** '
+                 f'with {len(evaluation.predictions)} predictions '
+                 f'and {len(evaluation.reports)} reports.')
+
+    def evaluation_readme(self, evaluation):
+        # Building /evaluations/{evaluation.name}/readme.md
+        path = self.path / 'evaluations' / evaluation.name / 'readme.md'
+        with PageBuilder(path) as pb:
+            pb.header('Evaluation', evaluation.name, 'readme')
+            pb.navigation(
+                breadcrumbs('evaluations/evaluation'),
+                subpages('evaluations/evaluation', 'readme'))
+            pb.write(f'{evaluation.readme}')
+
+    def evaluation_code(self, evaluation):
+        # Building /evaluations/{evaluation.name}/code.md
+        path = self.path / 'evaluations' / evaluation.name / 'code.md'
+        with PageBuilder(path) as pb:
+            pb.header('Evaluation', evaluation.name, 'code')
+            pb.navigation(
+                breadcrumbs('evaluations/evaluation'),
+                subpages('evaluations/evaluation', 'code'))
+            if len(evaluation.scripts) > 1:
+                script_names = [f'**{s.name}**' for s in evaluation.scripts]
+                pb.p(f'There are {len(evaluation.scripts)} code files: '
+                     f'{" and ".join(script_names)}.')
+            for script in evaluation.scripts:
+                pb.subheader(f'{script.name}')
+                url = f'{EVALUATIONS_REPO_URL}/tree/{EVALUATIONS_COMMIT}/{evaluation.name}/{script.name}'
+                pb.p(f'View [{script.name}]({url}) in the Evaluation repository on GitHub')
+                code = read_file(evaluation.path / script.name)
+                pb.code(code)
+
+    def evaluation_predictions(self, evaluation):
+        # Building /evaluations/{evaluation.name}/predictions/index.md
+        path = self.path / 'evaluations' / evaluation.name / 'predictions' / 'index.md'
+        with PageBuilder(path) as pb:
+            pb.header('Evaluation', evaluation.name, 'predictions')
+            pb.navigation(
+                breadcrumbs('evaluations/evaluation/predictions'),
+                subpages('evaluations/evaluation/predictions', 'predictions'))
+            for prediction in evaluation.predictions:
+                url = f'{EVALUATIONS_TREE}/{evaluation.name}/{prediction.name}'
+                pb.p(f'**{prediction.name}** ([view on GitHub]({url}))')
+                pb.write(str(prediction.readme) + '\n\n')
+
+    def evaluation_reports(self, evaluation):
+        # Building /evaluations/{evaluation.name}/reports/index.md
+        path = self.path / 'evaluations' / evaluation.name / 'reports' / 'index.md'
+        with PageBuilder(path) as pb:
+            pb.header('Evaluation', evaluation.name, 'reports')
+            pb.navigation(
+                breadcrumbs('evaluations/evaluation/predictions'),
+                subpages('evaluations/evaluation/predictions', 'reports'))
+            for report in evaluation.reports:
+                url = f'{EVALUATIONS_TREE}/{evaluation.name}/{report.name}'
+                pb.write(f'- [{report.name}]({url})\n')
 
 
 class PageBuilder:
@@ -510,7 +653,6 @@ class PageBuilder:
         self.fh.write(f'```{language}\n')
         self.fh.write(text)
         self.fh.write('\n```\n')
-
 
 
 
