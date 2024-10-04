@@ -35,104 +35,95 @@ EVALUATIONS_TREE = f'{EVALUATIONS_REPO_URL}/tree/{EVALUATIONS_COMMIT}'
 
 
 # Top-level directory structure
-ANNOTATIONS_DIR = 'annotations'
-TASKS_DIR = 'annotations/tasks'
-BATCHES_DIR = 'annotations/batches'
+TASKS_DIR = 'tasks'
+BATCHES_DIR = 'batches'
 EVALUATIONS_DIR = 'evaluations'
 
-# Navigation structure. This contains mappings from pages in directories to pages
-# higher up in the hierarchy.
-NAVIGATION = {
-    'BREADCRUMBS': {
-        'annotations':
-            [('Dashboard Home', '../index.md'),
-             ('Annotation Viewer', 'index.md')],
-        'annotations/tasks':
-            [('Dashboard Home', '../../index.md'),
-             ('Annotation Viewer', '../index.md')],
-        'annotations/tasks/task':
-            [('Dashboard', '../../../index.md'),
-             ('Annotations', '../../index.md'),
-             ('Tasks', '../index.md')],
-        'annotations/tasks/task/drops':
-            [('Dashboard', '../../../../index.md'),
-             ('Annotations', '../../../index.md'),
-             ('Tasks', '../../index.md'),
-             ('Task', '../index.md')],
-        'annotations/tasks/task/drops/drop':
-            [('Dashboard', '../../../../index.md'),
-             ('Annotations', '../../../index.md'),
-             ('Tasks', '../../index.md'),
-             ('Task', '../index.md'),
-             ('Data drops', 'index.md')],
-        'annotations/batches/batch':
-            [('Dashboard', '../../../index.md'),
-             ('Annotations', '../../index.md'),
-             ('Batches', '../index.md')],
-        'evaluations':
-            [('Dashboard Home', '../index.md'),
-             ('Evaluation Viewer', 'index.md')],
-        'evaluations/evaluation':
-            [('Dashboard Home', '../../index.md'),
-             ('Evaluation Viewer', '../index.md'),
-             ('Evaluations', '../list.md')],
-        'evaluations/evaluation/predictions':
-            [('Dashboard', '../../../index.md'),
-             ('Viewer', '../../index.md'),
-             ('Evaluations', '../../list.md'),
-             ('Evaluation', '../index.md')],
-    },
-    'SUBPAGES': {
-        'annotations':
-            [('repository readme', 'readme.md'),
-             ('tasks', 'tasks/index.md'),
-             ('batches', 'batches/index.md')],
-        'annotations/tasks':
-            [('repository readme', '../readme.md'),
-             ('tasks', '../tasks/index.md'),
-             ('batches', '../batches/index.md')],
-        'annotations/tasks/task':
-            [('task', 'index.md'),
-             ('readme', 'readme.md'),
-             ('gold files', 'golds.md'),
-             ('data drops', 'drops/index.md'),
-             ('batches', 'batches.md'),
-             ('script', 'script.md')],
-        'annotations/tasks/task/drops':
-            [('data drops', 'index.md')],
-        'annotations/tasks/task/drops/drop':
-            [('data drop', 'index.md')],
-        'annotations/batches/batch':
-            [('batch', 'index.md'),
-             ('files', 'files.md'),
-             ('content', 'content.md'),
-             ('tasks', 'tasks.md'),
-             ('use in evaluation', 'evaluation.md')],
-        'evaluations':
-            [('repository readme', 'readme.md'),
-             ('evaluations', 'list.md')],
-        'evaluations/evaluation':
-            [('evaluation', 'index.md'),
-             ('readme', 'readme.md'),
-             ('code', 'code.md'),
-             ('predictions', 'predictions/index.md'),
-             ('reports', 'reports/index.md')],
-        'evaluations/evaluation/predictions':
-            [('evaluation', '../index.md'),
-             ('readme', '../readme.md'),
-             ('code', '../code.md'),
-             ('predictions', '../predictions/index.md'),
-             ('reports', '../reports/index.md')],
-    }
+
+# Mappings from pages in directories to pages higher up in the hierarchy.
+BREADCRUMBS = {
+    'batches':
+        [('Dashboard', '../index.md'),
+         ('Batches', 'index.md')],
+    'batches/batch':
+        [('Dashboard', '../../index.md'),
+         ('Batches', '../index.md'),
+         ('Batch', 'index.md')],
+    'tasks':
+        [('Dashboard', '../index.md'),
+         ('Tasks', 'index.md')],
+    'tasks/task':
+        [('Dashboard', '../../index.md'),
+         ('Tasks', '../index.md'),
+         ('Task', 'index.md')],
+    'tasks/task/drops':
+        [('Dashboard', '../../../index.md'),
+         ('Tasks', '../../index.md'),
+         ('Task', '../index.md'),
+         ('Drops', 'index.md')],
+    'tasks/task/drops/drop':
+        [('Dashboard', '../../../index.md'),
+         ('Tasks', '../../index.md'),
+         ('Task', '../index.md'),
+         ('Drops', 'index.md'),
+         ('Drop', None)],
+    'evaluations':
+        [('Dashboard', '../index.md'),
+         ('Evaluations', 'index.md')],
+    'evaluations/evaluation':
+        [('Dashboard', '../../index.md'),
+         ('Evaluations', '../index.md'),
+         ('Evaluation', 'index.md')],
+    'evaluations/evaluation/predictions':
+        [('Dashboard', '../../../index.md'),
+         ('Evaluations', '../../index.md'),
+         ('Evaluation', '../index.md'),
+         ('Predictions', 'index.md')],
+    'evaluations/evaluation/reports':
+        [('Dashboard', '../../../index.md'),
+         ('Evaluations', '../../index.md'),
+         ('Evaluation', '../index.md'),
+         ('Reports', 'index.md')],
+}
+
+# Mappings from directories to subpages
+SUBPAGES = {
+    'batches/batch':
+        [('batch', 'index.md'),
+         ('files', 'files.md'),
+         ('content', 'content.md'),
+         ('tasks', 'tasks.md'),
+         ('use in evaluation', 'evaluation.md')],
+    'tasks/task':
+        [('task', 'index.md'),
+         ('readme', 'readme.md'),
+         ('gold files', 'golds.md'),
+         ('data drops', 'drops/index.md'),
+         ('batches', 'batches.md'),
+         ('script', 'script.md')],
+    'evaluations/evaluation':
+        [('evaluation', 'index.md'),
+         ('readme', 'readme.md'),
+         ('code', 'code.md'),
+         ('predictions', 'predictions/index.md'),
+         ('reports', 'reports/index.md')],
+    'evaluations/evaluation/predictions':
+        [('evaluation', '../index.md'),
+         ('readme', '../readme.md'),
+         ('code', '../code.md'),
+         ('predictions', '../predictions/index.md'),
+         ('reports', '../reports/index.md')],
 }
 
 
 def breadcrumbs(path: str, current_page: str = ''):
-    crumbs = NAVIGATION['BREADCRUMBS'].get(path)
+    crumbs = BREADCRUMBS.get(path, [])
+    # TODO: could probably change this so that the last crumb is never a link
+    # either in the code or in the BREADCRUMBS dictionary.
     return adjust_navigation_elements(crumbs, current_page)
 
 def subpages(path: str, current_page: str = ''):
-    pages = NAVIGATION['SUBPAGES'].get(path)
+    pages = SUBPAGES.get(path, [])
     return adjust_navigation_elements(pages, current_page)
 
 def adjust_navigation_elements(elements: list, current: str):
@@ -154,19 +145,16 @@ class SiteBuilder():
 
     def __init__(self, directory: str):
         self.path = pathlib.Path(directory)
-        # TODO: since the commits are now stored in module variables these two
-        # should be retired
-        self.commit_sha = ANNOTATIONS.repo.head.commit.hexsha
-        self.commit_short_sha = ANNOTATIONS.repo.git.rev_parse(self.commit_sha, short=8)
 
     def build(self):
         self.create_directories()
         self.index()
-        self.annotations()
+        self.batches()
+        self.tasks()
         self.evaluations()
 
     def create_directories(self):
-        dirs = [ANNOTATIONS_DIR, TASKS_DIR, BATCHES_DIR, EVALUATIONS_DIR]
+        dirs = [TASKS_DIR, BATCHES_DIR, EVALUATIONS_DIR]
         for batch in ANNOTATIONS.batches:
             dirs.append(os.path.join(BATCHES_DIR, batch.stem))
         for task in ANNOTATIONS.tasks:
@@ -187,258 +175,100 @@ class SiteBuilder():
         # Building /index.md
         path = self.path / 'index.md'
         with PageBuilder(path) as pb:
-            pb.header('CLAMS Viewers')
-            pb.p('CLAMS Viewers for browsing annotations and evaluations.')
-            pb.p('The homepages for the repositories are available at')
+            pb.header('CLAMS Dashboard')
+            pb.p('CLAMS Dashboard for viewing annotations and evaluations. It is '
+                 'a user-friendly interface to annotation tasks, annotation batches, '
+                 'and evaluations, as well as the relations between them.')
+            pb.p('Available viewers:')
+            pb.write('- 🕵️‍♀️ [Annotation Batches](batches/index.md)\n')
+            pb.write('- 🕵️‍♀️ [Annotation Tasks](tasks/index.md)\n')
+            pb.write('- 🕵️‍♀️ [Evaluations](evaluations/index.md)\n\n')
+            pb.p('The homepages for the repositories are available at:')
             pb.write(f'- 🏠 [{ANNOTATIONS_REPO_URL}]({ANNOTATIONS_REPO_URL})\n')
             pb.write(f'- 🏠 [{EVALUATIONS_REPO_URL}]({EVALUATIONS_REPO_URL})\n\n')
+            pb.p('It is a good idea to look at the README.md files in those '
+                 'repositories.')
             pb.p('The code for this dashboard is maintained at'
-                 f' [{DASHBOARD_REPO_URL}]({DASHBOARD_REPO_URL})')
-            pb.write('- 🕵️‍♀️ [Annotation Viewer](annotations/index.md)\n\n')
-            pb.write('- 🕵️‍♀️ [Evaluation Viewer](evaluations/index.md)\n\n')
+                 f' [{DASHBOARD_REPO_URL}]({DASHBOARD_REPO_URL}).')
 
-    def annotations(self):
-        # Building /annotations/
-        self.annotations_index()
-        self.annotations_readme()
-        self.annotations_tasks()
-        self.annotations_batches()
-
-    def annotations_index(self):
-        # Building /annotations/index.md
-        path = self.path / 'annotations' / 'index.md'
-        with PageBuilder(path) as pb:
-            pb.header('Annotation Viewer')
-            pb.debug(f'annotations_index()\n{path}')
-            pb.navigation(
-                breadcrumbs('annotations', 'Annotation Viewer'),
-                subpages('annotations', None))
-            pb.write(
-                f'The Annotation Viewer gives a user-friendly peek into [the GitHub '
-                f'annotation repository]({ANNOTATIONS_REPO_URL}). It includes ways '
-                f'to browse annotation tasks and annotation batches. The Annotation '
-                f'Viewer also shows use of annotations in the '
-                f'[GitHub evaluations repository]({EVALUATIONS_REPO_URL}).')
-
-    def annotations_readme(self):
-        # Building /annotations/readme.md
-        path = self.path / 'annotations' / 'readme.md'
-        with PageBuilder(path) as pb:
-            pb.header('Annotation Viewer', 'Repository Readme File')
-            pb.debug(f'annotations_readme()\n{path}')
-            pb.navigation(
-                breadcrumbs('annotations'),
-                subpages('annotations', 'repository readme'))
-            pb.write(ANNOTATIONS.readme)
-
-    def annotations_tasks(self):
-        # Building /annotations/tasks/index.md
-        # Building /annotations/tasks/{task.name}/
-        path = self.path / 'annotations' / 'tasks' / 'index.md'
-        with PageBuilder(path) as pb:
-            pb.header('Annotation Viewer', 'Tasks')
-            pb.debug('annotations_tasks()')
-            pb.navigation(
-                breadcrumbs('annotations/tasks'),
-                subpages('annotations/tasks', 'tasks'))
-            pb.p(f'Annotation tasks with number of gold files in each task:')
-            pb.table_header('task', 'size', align="lr")
-            for task in ANNOTATIONS.tasks:
-                pb.table_row([f'[{task.name}]({task.name}/index.md)', len(task)])
-                self.annotations_task(task)
-
-    def annotations_task(self, task):
-        # Building /annotations/tasks/{task.name}/
-        path = self.path / 'annotations' / 'tasks' / task.name
-        self.annotations_task_index(path / 'index.md', task)
-        self.annotations_task_readme(path / 'readme.md', task)
-        self.annotations_task_gold(path / 'golds.md', task)
-        self.annotations_task_drops(path / 'drops', task, task.data_drops)
-        self.annotations_task_batches(path / 'batches.md', task)
-        self.annotations_task_script(path / 'script.md', task)
-
-    def annotations_task_index(self, path, task):
-        # Building /annotations/tasks/{task.name}/index.md
-        with PageBuilder(path) as pb:
-            pb.header('Annotation Task', task.name)
-            pb.debug(f'annotations_task_index()')
-            pb.navigation(
-                breadcrumbs('annotations/tasks/task'),
-                subpages('annotations/tasks/task', 'task'))
-            pb.p(
-                f'Task {task.name} has {len(task.data_drops)} data drops'
-                f' and {len(task)} gold files.')
-
-    def annotations_task_readme(self, path, task):
-        # Building /annotations/tasks/{task.name}/readme.md
-        with PageBuilder(path) as pb:
-            pb.header('Annotation Task', task.name, 'Readme')
-            pb.debug(f'annotations_task_readme()')
-            pb.navigation(
-                breadcrumbs('annotations/tasks/task'),
-                subpages('annotations/tasks/task', 'readme'))
-            # NOTE: if we just give a link to the README at GitHub we can use
-            # /tree/{self.commit_sha}/{task.name}/readme.md
-            pb.write(task.readme)
-
-    def annotations_task_gold(self, path, task):
-        # Building /annotations/tasks/{task.name}/golds.md
-        with PageBuilder(path) as pb:
-            pb.header('Annotation Task', task.name, 'Gold files')
-            pb.debug(f'annotations_task_gold()')
-            pb.navigation(
-                breadcrumbs('annotations/tasks/task'),
-                subpages('annotations/tasks/task', 'gold files'))
-            pb.subheader('Gold standard files in this task.')
-            pb.p(f'Total number of files is {len(task.gold_files)},'
-                 ' this includes files from all data drops. Clicking'
-                 ' a link takes you to the data file in the repository.')
-            url = f'{ANNOTATIONS_REPO_URL}/tree/{self.commit_sha}/{task.name}/golds'
-            for gf in task.gold_files:
-                pb.write(f'1. [{gf.name}]({url}/{gf.name})\n')
-
-    def annotations_task_drops(self, path, task, drops: dict):
-        # Building /annotations/tasks/{task.name}/drops/index.md
-        # Building /annotations/tasks/{task.name}/drops/{datadrop.name}.md
-        index_path = path / 'index.md'
-        with PageBuilder(index_path) as pb:
-            pb.header('Annotation Task', task.name, 'Data drops')
-            pb.debug(f'annotations_task_drops()')
-            pb.navigation(
-                breadcrumbs('annotations/tasks/task/drops'),
-                subpages('annotations/tasks/task/drops', 'data drops'))
-            pb.p(f'Data drops for task **{task.name}** with size in number of files.')
-            pb.table_header('data drop name', 'size', align='lr')
-            for dd in task.data_drops.values():
-                pb.table_row([f'[{dd.name}]({dd.name}.md)', len(dd)])
-                self.annotations_task_drop_index(path, task, dd)
-
-    def annotations_task_drop_index(self, path, task, datadrop):
-        # Building /annotations/tasks/{task.name}/drops/{datadrop.name}.md
-        index_path = path / f'{datadrop.stem}.md'
-        with PageBuilder(index_path) as pb:
-            pb.header('Data Drop', datadrop.name)
-            pb.navigation(
-                breadcrumbs('annotations/tasks/task/drops/drop'),
-                subpages('annotations/tasks/task/drops/drop', 'data drop'))
-            pb.p(f'Files in data drop **{datadrop.name}**,'
-                 + f' with links to sources on the GitHub repository.')
-            tree_url = f'{ANNOTATIONS_REPO_URL}/tree/{self.commit_sha}'
-            for fname in sorted(datadrop.file_names):
-                file_url = f'{tree_url}/{task.name}/{datadrop.name}/{fname}'
-                pb.write(f'1. [{fname}]({file_url})\n')
-
-    def annotations_task_batches(self, path, task):
-        # Building /annotations/tasts/{task.name}/batches.md
-        with PageBuilder(path) as pb:
-            pb.header('Annotation Task', task.name, 'Batches')
-            pb.debug(f'annotations_task_batches()')
-            pb.navigation(
-                breadcrumbs('annotations/tasks/task'),
-                subpages('annotations/tasks/task', 'batches'))
-            pb.p('GUIDs from annotation batches that were used in this task:')
-            pb.table_header('batch', 'guids', 'batch size', align='llr')
-            for batch in ANNOTATIONS.batches:
-                comp = task.compare_to_batch(batch)
-                batch_link = f'[{batch.stem}](../../batches/{batch.stem}/index.md)'
-                pb.table_row([batch_link, comp.in_both, len(batch)])
-
-    def annotations_task_script(self, path, task):
-        # Building /annotations/tasts/{task.name}/script.md
-        with PageBuilder(path) as pb:
-            pb.header('Annotation Task', task.name, 'Script')
-            pb.debug(f'annotations_task_script()')
-            pb.navigation(
-                breadcrumbs('annotations/tasks/task'),
-                subpages('annotations/tasks/task', 'script'))
-            pb.code(task.process_content())
-
-    def annotations_batches(self):
-        # Building /annotations/batches
-        # Building /annotations/batches/{batch.stem}
-        batches_path = self.path / 'annotations' / 'batches'
+    def batches(self):
+        # Building /batches
+        # Building /batches/{batch.stem}
+        batches_path = self.path / 'batches'
         batches_index_path = batches_path / 'index.md'
         with PageBuilder(batches_index_path) as pb:
-            pb.header('Annotation Viewer', 'Batches')
-            pb.debug(f'annotation_batches()\n{batches_index_path}')
-            pb.navigation(
-                # note that breadcrumbs are the same as for tasks and that the
-                # subpages are similar except for the current_page filter
-                breadcrumbs('annotations/tasks'),
-                subpages('annotations/tasks', 'batches'))
+            pb.debug(f'batches()')
+            pb.navigation_breadcrumbs(breadcrumbs('batches', 'Batches'))
+            pb.header('Annotation Batches')
             pb.p(f'Annotation batches with number of files in each batch:')
             pb.table_header('batch', 'size', align='lr')
             for batch in ANNOTATIONS.batches:
                 pb.table_row([f'[{batch.stem}]({batch.stem}/index.md)', len(batch)])
-                self.annotations_batch(batch)
+                self.batch(batch)
 
-    def annotations_batch(self, batch):
-        # Building /annotations/batches/{batch.stem}
-        path = self.path / 'annotations' / 'batches' / batch.stem
-        self.annotations_batch_index(path / 'index.md', batch)
-        self.annotations_batch_files(path / 'files.md', batch)
-        self.annotations_batch_content(path / 'content.md', batch)
-        self.annotations_batch_tasks(path / 'tasks.md', batch)
-        self.annotations_batch_evaluation(path / 'evaluation.md', batch)
+    def batch(self, batch):
+        # Building /batches/{batch.stem}
+        path = self.path / 'batches' / batch.stem
+        self.batch_index(path / 'index.md', batch)
+        self.batch_files(path / 'files.md', batch)
+        self.batch_content(path / 'content.md', batch)
+        self.batch_tasks(path / 'tasks.md', batch)
+        self.batch_evaluation(path / 'evaluation.md', batch)
 
-    def annotations_batch_index(self, path, batch):
-        # Building /annotations/batches/{batch.stem}/index.md
+    def batch_index(self, path, batch):
+        # Building /batches/{batch.stem}/index.md
         with PageBuilder(path) as pb:
+            pb.debug(f'batch_index()')
+            pb.navigation_breadcrumbs(breadcrumbs('batches/batch', 'Batch'))
             pb.header('Annotation Batch', batch.stem)
-            pb.debug(f'annotations_batch_index()\n{path}')
-            pb.navigation(
-                breadcrumbs('annotations/batches/batch'),
-                subpages('annotations/batches/batch', 'batch'))
+            pb.navigation_subpages(subpages('batches/batch', 'batch'))
             pb.p(f'Batch **{batch.stem}** has {len(batch.files)} files.')
             pb.subheader(f'Batch comment')
             pb.write(batch.comment)
 
-    def annotations_batch_files(self, path, batch):
-        # Building /annotations/batches/{batch.stem}/files.md
+    def batch_files(self, path, batch):
+        # Building /batches/{batch.stem}/files.md
         with PageBuilder(path) as pb:
+            pb.debug(f'batch_files()')
+            pb.navigation_breadcrumbs(breadcrumbs('batches/batch', 'Batch'))
             pb.header('Annotation Batch', batch.stem)
-            pb.debug(f'annotations_batch_files()\n{path}')
-            pb.navigation(
-                breadcrumbs('annotations/batches/batch'),
-                subpages('annotations/batches/batch', 'files'))
+            pb.navigation_subpages(subpages('batches/batch', 'files'))
             pb.subheader('File identifiers in batch')
             for fileid in batch.files:
                 pb.write(f'1. {fileid}\n')
- 
-    def annotations_batch_content(self, path, batch):
-        # Building /annotations/batches/{batch.stem}/content.md
+
+    def batch_content(self, path, batch):
+        # Building /batches/{batch.stem}/content.md
         with PageBuilder(path) as pb:
+            pb.debug(f'batch_content()')
+            pb.navigation_breadcrumbs(breadcrumbs('batches/batch', 'Batch'))
             pb.header('Annotation Batch', batch.stem)
-            pb.debug(f'annotations_batch_content()\n{path}')
-            pb.navigation(
-                breadcrumbs('annotations/batches/batch'),
-                subpages('annotations/batches/batch', 'content'))
+            pb.navigation_subpages(subpages('batches/batch', 'files'))
             pb.subheader('Batch file content')
-            pb.write(f'<pre>\n{batch.content.strip()}\n</pre>\n\n')
- 
-    def annotations_batch_tasks(self, path, batch):
-        # Building /annotations/batches/{batch.stem}/tasks.md
+            pb.pre(batch.content.strip())
+
+    def batch_tasks(self, path, batch):
+        # Building /batches/{batch.stem}/tasks.md
         with PageBuilder(path) as pb:
+            pb.debug(f'batch_tasks()')
+            pb.navigation_breadcrumbs(breadcrumbs('batches/batch', 'Batch'))
             pb.header('Annotation Batch', batch.stem)
-            pb.debug(f'annotations_batch_tasks()\n{path}')
-            pb.navigation(
-                breadcrumbs('annotations/batches/batch'),
-                subpages('annotations/batches/batch', 'tasks'))
+            pb.navigation_subpages(subpages('batches/batch', 'tasks'))
             pb.subheader('Batch usage by annotation task')
             pb.p('This shows how many GUIDs from this batch were used in annotation tasks.')
             pb.table_header('task name', 'overlap', 'task size', align='lrr')
             for task in ANNOTATIONS.tasks:
+                # TODO: create links to tasks
                 comparison = task.compare_to_batch(batch)
                 pb.table_row([task.name, comparison.in_both, len(task)])
 
-    def annotations_batch_evaluation(self, path, batch):
-        # Building /annotations/batches/{batch.stem}/eval.md
+    def batch_evaluation(self, path, batch):
+        # Building /batches/{batch.stem}/evaluation.md
         with PageBuilder(path) as pb:
+            pb.debug(f'batch_evaluation()')
+            pb.navigation_breadcrumbs(breadcrumbs('batches/batch', 'Batch'))
             pb.header('Annotation Batch', batch.stem)
-            pb.debug(f'annotations_batch_evaluation()\n{path}')
-            pb.navigation(
-                breadcrumbs('annotations/batches/batch'),
-                subpages('annotations/batches/batch', 'use in evaluation'))
+            pb.navigation_subpages(subpages('batches/batch', 'use in evaluation'))
             pb.subheader('Batch usage in evaluation repository')
             batch_usage1 = MODEL.batch_usage_in_system_predictions(batch.stem)
             batch_usage2 = MODEL.batch_usage_in_system_reports(batch.stem)
@@ -455,59 +285,148 @@ class SiteBuilder():
             else:
                 pb.write('*None*\n\n')
 
+    def tasks(self):
+        # Building /tasks/index.md
+        # Building /tasks/{task.name}/
+        path = self.path / 'tasks' / 'index.md'
+        with PageBuilder(path) as pb:
+            pb.debug('tasks()')
+            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.header('Annotation Tasks')
+            pb.p(f'Annotation tasks with number of gold files in each task:')
+            pb.table_header('task', 'size', align="lr")
+            for task in ANNOTATIONS.tasks:
+                pb.table_row([f'[{task.name}]({task.name}/index.md)', len(task)])
+                self.task(task)
+
+    def task(self, task):
+        # Building /tasks/{task.name}/
+        path = self.path / 'tasks' / task.name
+        self.task_index(path / 'index.md', task)
+        self.task_readme(path / 'readme.md', task)
+        self.task_gold(path / 'golds.md', task)
+        self.task_drops(path / 'drops', task, task.data_drops)
+        self.task_batches(path / 'batches.md', task)
+        self.task_script(path / 'script.md', task)
+
+    def task_index(self, path, task):
+        # Building /tasks/{task.name}/index.md
+        with PageBuilder(path) as pb:
+            pb.debug(f'annotations_task_index()')
+            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.header('Annotation Task', task.name)
+            pb.navigation_subpages(subpages('tasks/task', 'task'))
+            pb.p(
+                f'Task {task.name} has {len(task.data_drops)} data drops'
+                f' and {len(task)} gold files.')
+
+    def task_readme(self, path, task):
+        # Building /tasks/{task.name}/readme.md
+        with PageBuilder(path) as pb:
+            pb.header('Annotation Task', task.name, 'Readme')
+            pb.debug(f'task_readme()')
+            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.navigation_subpages(subpages('tasks/task', 'readme'))
+            # NOTE: if we just give a link to the README at GitHub we can use
+            # /tree/{self.commit_sha}/{task.name}/readme.md
+            pb.write(task.readme)
+    
+    def task_gold(self, path , task):
+        # Building /tasks/{task.name}/golds.md
+        with PageBuilder(path) as pb:
+            pb.header('Annotation Task', task.name, 'Gold files')
+            pb.debug(f'task_gold()')
+            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.navigation_subpages(subpages('tasks/task', 'gold files'))
+            pb.p(f'This page lists the gold standard files in this task.'
+                 f'The total number of files is {len(task.gold_files)},'
+                 f' this includes files from all data drops. Clicking'
+                 f' a link takes you to the data file in the repository.')
+            url = f'{ANNOTATIONS_TREE}/{task.name}/golds'
+            for gf in task.gold_files:
+                pb.write(f'1. [{gf.name}]({url}/{gf.name})\n')
+    
+    def task_drops(self, path, task, data_drops):
+        # Building /tasks/{task.name}/drops/index.md
+        # Building /tasks/{task.name}/drops/{datadrop.name}.md
+        index_path = path / 'index.md'
+        with PageBuilder(index_path) as pb:
+            pb.debug(f'task_drops()')
+            pb.navigation_breadcrumbs(breadcrumbs('tasks/task/drops', 'Drops'))
+            pb.header('Annotation Task', task.name, 'Data drops')
+            pb.p(f'Data drops for task **{task.name}** with size in number of files.')
+            pb.table_header('data drop name', 'size', align='lr')
+            for dd in task.data_drops.values():
+                pb.table_row([f'[{dd.name}]({dd.name}.md)', len(dd)])
+                self.task_drop(path, task, dd)
+
+    def task_drop(self, path, task, datadrop):
+        # Building /tasks/{task.name}/drops/{datadrop.name}.md
+        index_path = path / f'{datadrop.stem}.md'
+        with PageBuilder(index_path) as pb:
+            pb.debug(f'task_drop()')
+            pb.navigation_breadcrumbs(breadcrumbs('tasks/task/drops/drop', 'Drop'))
+            pb.header('Data Drop', datadrop.name)
+            pb.p(f'Files in data drop **{datadrop.name}**,'
+                 + f' with links to sources on the GitHub repository.')
+            for fname in sorted(datadrop.file_names):
+                file_url = f'{ANNOTATIONS_TREE}/{task.name}/{datadrop.name}/{fname}'
+                pb.write(f'1. [{fname}]({file_url})\n')
+
+    def task_batches(self, path, task):
+        # Building /tasts/{task.name}/batches.md
+        with PageBuilder(path) as pb:
+            pb.debug(f'task_batches()')
+            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.header('Annotation Task', task.name, 'Batches')
+            pb.navigation_subpages(subpages('tasks/task', 'batches'))
+            pb.p('GUIDs from annotation batches that were used in this task:')
+            pb.table_header('batch', 'guids', 'batch size', align='llr')
+            for batch in ANNOTATIONS.batches:
+                comp = task.compare_to_batch(batch)
+                batch_link = f'[{batch.stem}](../../batches/{batch.stem}/index.md)'
+                pb.table_row([batch_link, comp.in_both, len(batch)])
+    
+    def task_script(self, path, task):
+        # Building /tasts/{task.name}/script.md
+        with PageBuilder(path) as pb:
+            pb.debug(f'task_script()')
+            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.header('Annotation Task', task.name, 'Script')
+            pb.navigation_subpages(subpages('tasks/task', 'script'))
+            pb.code(task.process_content())
+
     def evaluations(self):
-        # Building /evaluations/index.md
-        # Building /evaluations/{evaluation.name}/
-        self.evaluations_index()
-        self.evaluations_readme()
-        self.evaluations_list()
-        for evaluation in EVALUATIONS:
-            self.evaluation_index(evaluation)
-            self.evaluation_readme(evaluation)
-            self.evaluation_code(evaluation)
-            self.evaluation_predictions(evaluation)
-            self.evaluation_reports(evaluation)
-
-    def evaluations_index(self):
-        # Building /evaluations/index.md
+       # Building /evaluations/index.md
+       # Building /evaluations/{evaluation.name}/
         with PageBuilder(self.path / 'evaluations' / 'index.md') as pb:
-            pb.header('Evaluation Viewer')
-            pb.navigation(
-                breadcrumbs('evaluations', 'Evaluation Viewer'),
-                subpages('evaluations'))
-            pb.p(f'The Evaluation Viewer gives a user-friendly peek into [the GitHub '
-                 f'evaluation repository]({EVALUATIONS_REPO_URL}).')
-
-    def evaluations_readme(self):
-        # Building /evaluations/readme.md
-        with PageBuilder(self.path / 'evaluations' / 'readme.md') as pb:
-            pb.header('Evaluation Viewer', 'Repository Readme File')
-            pb.navigation(
-                breadcrumbs('evaluations'),
-                subpages('evaluations', 'repository readme'))
-            pb.write(EVALUATIONS.readme)
-
-    def evaluations_list(self):
-        # Building /evaluations/list.md
-        with PageBuilder(self.path / 'evaluations' / 'list.md') as pb:
-            pb.header('Evaluation Viewer', 'List of evaluations')
-            pb.navigation(
-                breadcrumbs('evaluations'),
-                subpages('evaluations', 'evaluations'))
+            pb.navigation_breadcrumbs(breadcrumbs('evaluations', 'Evaluations'))
+            pb.header('Evaluations')
             pb.table_header('Evaluation', 'Predictions', 'Reports', align='lrr')
             for evaluation in EVALUATIONS:
                 pb.table_row([
                     f'[{evaluation.name}]({evaluation.name}/index.md)',
                     len(evaluation.predictions),
                     len(evaluation.reports)])
+                self.evaluation(evaluation)
 
-    def evaluation_index(self, evaluation):
+    def evaluation(self, evaluation):
+        # Building /evaluations/{evaluation.name}/
+        path = self.path / 'evaluations' / evaluation.name
+        self.evaluation_index(path / 'index.md', evaluation)
+        self.evaluation_readme(evaluation)
+        self.evaluation_code(evaluation)
+        self.evaluation_predictions(evaluation)
+        self.evaluation_reports(evaluation)
+
+    def evaluation_index(self, path, evaluation):
         # Building /evaluations/{evaluation.name}/index.md
-        path = self.path / 'evaluations' / evaluation.name / 'index.md'
         with PageBuilder(path) as pb:
+            pb.debug('evaluation_index()')
+            pb.navigation_breadcrumbs(
+                breadcrumbs('evaluations/evaluation', 'Evaluation'))
             pb.header('Evaluation', evaluation.name)
-            pb.navigation(
-                breadcrumbs('evaluations/evaluation'),
+            pb.navigation_subpages(
                 subpages('evaluations/evaluation', 'evaluation'))
             pb.p(f'Evaluation **{evaluation.name}** '
                  f'with {len(evaluation.predictions)} predictions '
@@ -517,9 +436,11 @@ class SiteBuilder():
         # Building /evaluations/{evaluation.name}/readme.md
         path = self.path / 'evaluations' / evaluation.name / 'readme.md'
         with PageBuilder(path) as pb:
+            pb.debug('evaluation_readme()')
+            pb.navigation_breadcrumbs(
+                breadcrumbs('evaluations/evaluation', 'Evaluation'))
             pb.header('Evaluation', evaluation.name, 'readme')
-            pb.navigation(
-                breadcrumbs('evaluations/evaluation'),
+            pb.navigation_subpages(
                 subpages('evaluations/evaluation', 'readme'))
             pb.write(f'{evaluation.readme}')
 
@@ -527,9 +448,11 @@ class SiteBuilder():
         # Building /evaluations/{evaluation.name}/code.md
         path = self.path / 'evaluations' / evaluation.name / 'code.md'
         with PageBuilder(path) as pb:
+            pb.debug('evaluation_code()')
+            pb.navigation_breadcrumbs(
+                breadcrumbs('evaluations/evaluation', 'Evaluation'))
             pb.header('Evaluation', evaluation.name, 'code')
-            pb.navigation(
-                breadcrumbs('evaluations/evaluation'),
+            pb.navigation_subpages(
                 subpages('evaluations/evaluation', 'code'))
             if len(evaluation.scripts) > 1:
                 script_names = [f'**{s.name}**' for s in evaluation.scripts]
@@ -537,7 +460,7 @@ class SiteBuilder():
                      f'{" and ".join(script_names)}.')
             for script in evaluation.scripts:
                 pb.subheader(f'{script.name}')
-                url = f'{EVALUATIONS_REPO_URL}/tree/{EVALUATIONS_COMMIT}/{evaluation.name}/{script.name}'
+                url = f'{EVALUATIONS_TREE}/{evaluation.name}/{script.name}'
                 pb.p(f'View [{script.name}]({url}) in the Evaluation repository on GitHub')
                 code = read_file(evaluation.path / script.name)
                 pb.code(code)
@@ -546,9 +469,11 @@ class SiteBuilder():
         # Building /evaluations/{evaluation.name}/predictions/index.md
         path = self.path / 'evaluations' / evaluation.name / 'predictions' / 'index.md'
         with PageBuilder(path) as pb:
+            pb.debug('evaluation_predictions()')
+            pb.navigation_breadcrumbs(
+                breadcrumbs('evaluations/evaluation/predictions', 'Predictions'))
             pb.header('Evaluation', evaluation.name, 'predictions')
-            pb.navigation(
-                breadcrumbs('evaluations/evaluation/predictions'),
+            pb.navigation_subpages(
                 subpages('evaluations/evaluation/predictions', 'predictions'))
             for prediction in evaluation.predictions:
                 url = f'{EVALUATIONS_TREE}/{evaluation.name}/{prediction.name}'
@@ -559,9 +484,12 @@ class SiteBuilder():
         # Building /evaluations/{evaluation.name}/reports/index.md
         path = self.path / 'evaluations' / evaluation.name / 'reports' / 'index.md'
         with PageBuilder(path) as pb:
+            pb.debug('evaluation_reports()')
+            pb.navigation_breadcrumbs(
+                breadcrumbs('evaluations/evaluation/reports', 'Reports'))
             pb.header('Evaluation', evaluation.name, 'reports')
-            pb.navigation(
-                breadcrumbs('evaluations/evaluation/predictions'),
+            # subpage structure is same as for predictions
+            pb.navigation_subpages(
                 subpages('evaluations/evaluation/predictions', 'reports'))
             for report in evaluation.reports:
                 url = f'{EVALUATIONS_TREE}/{evaluation.name}/{report.name}'
@@ -600,7 +528,7 @@ class PageBuilder:
     def subheader(self, text: str):
         self.fh.write(f'#### {text}\n\n')
 
-    def navigation(self, breadcrumbs: list, pages: list = None):
+    def navigation_breadcrumbs(self, breadcrumbs: list):
         """Adds the markdown for a navigation bar, including the breadcrumbs, the
         sub pages if any, and a horizontal rule as a separator."""
         for n, (name, link) in enumerate(breadcrumbs):
@@ -609,21 +537,25 @@ class PageBuilder:
                 self.fh.write(f'{prefix}**{name}** ')
             else:
                 self.fh.write(f'{prefix}[{name}]({link}) ')
-        if pages:
-            self.fh.write(' &nbsp; > &nbsp; ')
-            for n, (name, link) in enumerate(pages):
-                prefix = '\[ ' if n == 0 else '| '
-                if link is None:
-                    if not name.startswith('**'):
-                        name = f'**{name}**'
-                    self.fh.write(f'{prefix}{name} ')
-                else:
-                    self.fh.write(f'{prefix}[{name}]({link}) ')
-            self.fh.write('\]')
-        self.fh.write('\n\n---\n\n')
+        self.fh.write('\n')
+
+    def navigation_subpages(self, pages: list):
+        for n, (name, link) in enumerate(pages):
+            prefix = '\[ ' if n == 0 else '| '
+            if link is None:
+                if not name.startswith('**'):
+                    print('WARNING, unexpected **')
+                    name = f'**{name}**'
+                self.fh.write(f'{prefix}{name} ')
+            else:
+                self.fh.write(f'{prefix}[{name}]({link}) ')
+        self.fh.write('\]\n\n')
 
     def p(self, text: str):
         self.fh.write(f'{text}\n\n')
+
+    def nl(self):
+        self.fh.write('\n')
 
     def hr(self):
         self.fh.write(f'---\n\n')
@@ -644,6 +576,7 @@ class PageBuilder:
     def table_rows(self, rows: list):
         for row in rows:
             self.table_row(row)
+        self.nl()
 
     def table_row(self, row: list):
         row = [str(element) for element in row]
@@ -654,6 +587,9 @@ class PageBuilder:
         self.fh.write(text)
         self.fh.write('\n```\n')
 
+    def pre(self, text: str):
+        self.fh.write(f'<pre>\n{text.strip()}\n</pre>\n\n')
+
 
 
 if __name__ == '__main__':
@@ -662,7 +598,6 @@ if __name__ == '__main__':
         DEBUG = True
     builder = SiteBuilder('../docs/www')
     builder.build()
-    #print(builder.commit_sha, builder.commit_short_sha)
 
 
 '''
@@ -674,4 +609,3 @@ if __name__ == '__main__':
 👁
 
 '''
-
