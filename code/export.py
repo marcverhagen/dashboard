@@ -2,8 +2,24 @@
 
 Export the annotation and evaluation repositories as a set of markdown pages.
 
+The pages are intended to be uploaded as a GitHub pages site (which is now done
+by hand, but it may in the future be done via GitHub actions).
+
 $ python export.py 
 $ python export.py --debug
+
+The code uses the local clones of the annotations and evaluations repositories.
+
+Make sure that you check out the branches (typically the main branch) that you
+want to be displayed. Running the script will tell you want branch is being used
+and give warnings in two cases:
+
+1- files in the committed branch differ from files in the working directory
+2- there are untracked files
+
+Never publish the site if you get the first warning. The second may be all right
+if the untracked files do not contain any relevant information about annotations 
+or evaluations.
 
 """
 
@@ -14,7 +30,7 @@ import pathlib
 
 import config
 import model
-from utils import identity, read_file
+from utils import identity, read_file, check_repository
 
 
 DEBUG = False
@@ -28,17 +44,22 @@ ANNOTATIONS_REPO_URL = 'https://github.com/clamsproject/aapb-annotations'
 EVALUATIONS_REPO_URL = 'https://github.com/clamsproject/aapb-evaluations'
 DASHBOARD_REPO_URL = 'https://github.com/clamsproject/dashboard'
 
+ANNOTATIONS_WARNINGS = check_repository(ANNOTATIONS.repo)
+EVALUATIONS_WARNINGS = check_repository(EVALUATIONS.repo)
+
 ANNOTATIONS_COMMIT = ANNOTATIONS.repo.head.commit.hexsha
 EVALUATIONS_COMMIT = EVALUATIONS.repo.head.commit.hexsha
+ANNOTATIONS_COMMIT_SHORT = ANNOTATIONS.repo.git.rev_parse(ANNOTATIONS_COMMIT, short=8)
+EVALUATIONS_COMMIT_SHORT = EVALUATIONS.repo.git.rev_parse(EVALUATIONS_COMMIT, short=8)
 ANNOTATIONS_TREE = f'{ANNOTATIONS_REPO_URL}/tree/{ANNOTATIONS_COMMIT}'
 EVALUATIONS_TREE = f'{EVALUATIONS_REPO_URL}/tree/{EVALUATIONS_COMMIT}'
-
+ANNOTATIONS_BRANCH = ANNOTATIONS.repo.head.reference
+EVALUATIONS_BRANCH = EVALUATIONS.repo.head.reference
 
 # Top-level directory structure
 TASKS_DIR = 'tasks'
 BATCHES_DIR = 'batches'
 EVALUATIONS_DIR = 'evaluations'
-
 
 # Mappings from pages in directories to pages higher up in the hierarchy.
 BREADCRUMBS = {
@@ -96,20 +117,20 @@ SUBPAGES = {
          ('use in evaluation', 'evaluation.md')],
     'tasks/task':
         [('task', 'index.md'),
-         ('readme', 'readme.md'),
+         ('readme', 'readme_file.md'),
          ('gold files', 'golds.md'),
          ('data drops', 'drops/index.md'),
          ('batches', 'batches.md'),
          ('script', 'script.md')],
     'evaluations/evaluation':
         [('evaluation', 'index.md'),
-         ('readme', 'readme.md'),
+         ('readme', 'readme_file.md'),
          ('code', 'code.md'),
          ('predictions', 'predictions/index.md'),
          ('reports', 'reports/index.md')],
     'evaluations/evaluation/predictions':
         [('evaluation', '../index.md'),
-         ('readme', '../readme.md'),
+         ('readme', '../readme_file.md'),
          ('code', '../code.md'),
          ('predictions', '../predictions/index.md'),
          ('reports', '../reports/index.md')],
@@ -127,13 +148,9 @@ def subpages(path: str, current_page: str = ''):
     return adjust_navigation_elements(pages, current_page)
 
 def adjust_navigation_elements(elements: list, current: str):
-    adjusted = []
-    for page, link in elements:
-        if page == current:
-            adjusted.append((f'**{page}**', None))
-        else:
-            adjusted.append((page, link))
-    return adjusted
+    # Removes the link if it is the current page
+    return [((page, None) if page == current else (page, link))
+            for page, link in elements]
 
 
 def debug(text: str):
@@ -145,13 +162,26 @@ class SiteBuilder():
 
     def __init__(self, directory: str):
         self.path = pathlib.Path(directory)
+        self.info = [
+            (ANNOTATIONS_COMMIT_SHORT, ANNOTATIONS_BRANCH, config.ANNOTATIONS),
+            (EVALUATIONS_COMMIT_SHORT, EVALUATIONS_BRANCH, config.EVALUATIONS)]
+        self.warnings = ANNOTATIONS_WARNINGS + EVALUATIONS_WARNINGS
 
     def build(self):
+        self.print_info_and_warnings()
         self.create_directories()
         self.index()
         self.batches()
         self.tasks()
         self.evaluations()
+
+    def print_info_and_warnings(self):
+        """Write information and warnings to standard output."""
+        for commit, branch, dirname in self.info:
+            print(f'INFO: using commit {commit} of branch "{branch} '
+                  f'of repository "{pathlib.Path(dirname).name}"')
+        for warning in self.warnings:
+            print(f'WARNING: {warning.message}')
 
     def create_directories(self):
         dirs = [TASKS_DIR, BATCHES_DIR, EVALUATIONS_DIR]
@@ -188,7 +218,11 @@ class SiteBuilder():
             pb.write(f'- 🏠 [{EVALUATIONS_REPO_URL}]({EVALUATIONS_REPO_URL})\n\n')
             pb.p('It is a good idea to look at the README.md files in those '
                  'repositories.')
-            pb.p('The code for this dashboard is maintained at'
+            pb.p('Repository versions that were used for this dashboard:\n')
+            pb.table_header('repository', 'commit', 'branch')
+            for commit, branch, dirname in self.info:
+                pb.table_row([pathlib.Path(dirname).name, commit, branch])
+            pb.p('\nThe code for this dashboard is maintained at'
                  f' [{DASHBOARD_REPO_URL}]({DASHBOARD_REPO_URL}).')
 
     def batches(self):
@@ -255,12 +289,14 @@ class SiteBuilder():
             pb.header('Annotation Batch', batch.stem)
             pb.navigation_subpages(subpages('batches/batch', 'tasks'))
             pb.subheader('Batch usage by annotation task')
-            pb.p('This shows how many GUIDs from this batch were used in annotation tasks.')
+            pb.p('This shows how many GUIDs from this batch were used in '
+                 'annotation tasks.')
             pb.table_header('task name', 'overlap', 'task size', align='lrr')
             for task in ANNOTATIONS.tasks:
                 # TODO: create links to tasks
                 comparison = task.compare_to_batch(batch)
-                pb.table_row([task.name, comparison.in_both, len(task)])
+                url = f'../../tasks/{task.name}/index.md'
+                pb.table_row([f'[{task.name}]({url})', comparison.in_both, len(task)])
 
     def batch_evaluation(self, path, batch):
         # Building /batches/{batch.stem}/evaluation.md
@@ -303,7 +339,7 @@ class SiteBuilder():
         # Building /tasks/{task.name}/
         path = self.path / 'tasks' / task.name
         self.task_index(path / 'index.md', task)
-        self.task_readme(path / 'readme.md', task)
+        self.task_readme(path / 'readme_file.md', task)
         self.task_gold(path / 'golds.md', task)
         self.task_drops(path / 'drops', task, task.data_drops)
         self.task_batches(path / 'batches.md', task)
@@ -313,7 +349,7 @@ class SiteBuilder():
         # Building /tasks/{task.name}/index.md
         with PageBuilder(path) as pb:
             pb.debug(f'annotations_task_index()')
-            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.navigation_breadcrumbs(breadcrumbs('tasks/task', 'Task'))
             pb.header('Annotation Task', task.name)
             pb.navigation_subpages(subpages('tasks/task', 'task'))
             pb.p(
@@ -321,11 +357,11 @@ class SiteBuilder():
                 f' and {len(task)} gold files.')
 
     def task_readme(self, path, task):
-        # Building /tasks/{task.name}/readme.md
+        # Building /tasks/{task.name}/readme_file.md
         with PageBuilder(path) as pb:
-            pb.header('Annotation Task', task.name, 'Readme')
             pb.debug(f'task_readme()')
-            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.navigation_breadcrumbs(breadcrumbs('tasks/task', 'Task'))
+            pb.header('Annotation Task', task.name, 'Readme')
             pb.navigation_subpages(subpages('tasks/task', 'readme'))
             # NOTE: if we just give a link to the README at GitHub we can use
             # /tree/{self.commit_sha}/{task.name}/readme.md
@@ -334,14 +370,14 @@ class SiteBuilder():
     def task_gold(self, path , task):
         # Building /tasks/{task.name}/golds.md
         with PageBuilder(path) as pb:
-            pb.header('Annotation Task', task.name, 'Gold files')
             pb.debug(f'task_gold()')
-            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.navigation_breadcrumbs(breadcrumbs('tasks/task', 'Task'))
+            pb.header('Annotation Task', task.name, 'Gold files')
             pb.navigation_subpages(subpages('tasks/task', 'gold files'))
-            pb.p(f'This page lists the gold standard files in this task.'
-                 f'The total number of files is {len(task.gold_files)},'
-                 f' this includes files from all data drops. Clicking'
-                 f' a link takes you to the data file in the repository.')
+            pb.p(f'This page lists the gold standard files in this task. '
+                 f'The total number of files is {len(task.gold_files)}, '
+                 f'this includes files from all data drops. Clicking '
+                 f'a link takes you to the data file in the repository.')
             url = f'{ANNOTATIONS_TREE}/{task.name}/golds'
             for gf in task.gold_files:
                 pb.write(f'1. [{gf.name}]({url}/{gf.name})\n')
@@ -377,11 +413,11 @@ class SiteBuilder():
         # Building /tasts/{task.name}/batches.md
         with PageBuilder(path) as pb:
             pb.debug(f'task_batches()')
-            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.navigation_breadcrumbs(breadcrumbs('tasks/task', 'Task'))
             pb.header('Annotation Task', task.name, 'Batches')
             pb.navigation_subpages(subpages('tasks/task', 'batches'))
             pb.p('GUIDs from annotation batches that were used in this task:')
-            pb.table_header('batch', 'guids', 'batch size', align='llr')
+            pb.table_header('batch', 'guids', 'batch size', align='lrr')
             for batch in ANNOTATIONS.batches:
                 comp = task.compare_to_batch(batch)
                 batch_link = f'[{batch.stem}](../../batches/{batch.stem}/index.md)'
@@ -391,7 +427,7 @@ class SiteBuilder():
         # Building /tasts/{task.name}/script.md
         with PageBuilder(path) as pb:
             pb.debug(f'task_script()')
-            pb.navigation_breadcrumbs(breadcrumbs('tasks', 'Tasks'))
+            pb.navigation_breadcrumbs(breadcrumbs('tasks/task', 'Task'))
             pb.header('Annotation Task', task.name, 'Script')
             pb.navigation_subpages(subpages('tasks/task', 'script'))
             pb.code(task.process_content())
@@ -433,8 +469,8 @@ class SiteBuilder():
                  f'and {len(evaluation.reports)} reports.')
 
     def evaluation_readme(self, evaluation):
-        # Building /evaluations/{evaluation.name}/readme.md
-        path = self.path / 'evaluations' / evaluation.name / 'readme.md'
+        # Building /evaluations/{evaluation.name}/readme_file.md
+        path = self.path / 'evaluations' / evaluation.name / 'readme_file.md'
         with PageBuilder(path) as pb:
             pb.debug('evaluation_readme()')
             pb.navigation_breadcrumbs(
@@ -475,10 +511,17 @@ class SiteBuilder():
             pb.header('Evaluation', evaluation.name, 'predictions')
             pb.navigation_subpages(
                 subpages('evaluations/evaluation/predictions', 'predictions'))
-            for prediction in evaluation.predictions:
+            for n, prediction in enumerate(evaluation.predictions):
+                batch_name = prediction.prediction_batch
+                if batch_name not in ANNOTATIONS.batch_names:
+                    pb.warning(f'batch {batch_name} referenced in item {n+1} below '
+                               f'does not exist')
+            pb.p('List of system prediction batches with number of files.')
+            pb.p('Click the link to see the readme file and system output on GitHub.')
+            pb.table_header('n', 'prediction batch', 'files', align='rlr')
+            for n, prediction in enumerate(evaluation.predictions):
                 url = f'{EVALUATIONS_TREE}/{evaluation.name}/{prediction.name}'
-                pb.p(f'**{prediction.name}** ([view on GitHub]({url}))')
-                pb.write(str(prediction.readme) + '\n\n')
+                pb.table_row([n+1, f'[{prediction.name}]({url})', len(prediction)])
 
     def evaluation_reports(self, evaluation):
         # Building /evaluations/{evaluation.name}/reports/index.md
@@ -493,7 +536,11 @@ class SiteBuilder():
                 subpages('evaluations/evaluation/predictions', 'reports'))
             for report in evaluation.reports:
                 url = f'{EVALUATIONS_TREE}/{evaluation.name}/{report.name}'
-                pb.write(f'- [{report.name}]({url})\n')
+                pb.p(f'**{identity(report.name)}** ([view on GitHub]({url}))')
+                batch_name = report.report_batch
+                if batch_name not in ANNOTATIONS.batch_names:
+                    pb.warning(f'batch {batch_name} does not exist')
+
 
 
 class PageBuilder:
@@ -523,7 +570,7 @@ class PageBuilder:
 
     def header(self, *components: list):
         sep = ' &nbsp; ⎯ &nbsp; '
-        self.fh.write(f'# {sep.join(components)}\n\n')
+        self.fh.write(f'\n# {sep.join(components)}\n\n')
 
     def subheader(self, text: str):
         self.fh.write(f'#### {text}\n\n')
@@ -541,15 +588,12 @@ class PageBuilder:
 
     def navigation_subpages(self, pages: list):
         for n, (name, link) in enumerate(pages):
-            prefix = '\[ ' if n == 0 else '| '
+            prefix = '' if n == 0 else '| '
             if link is None:
-                if not name.startswith('**'):
-                    print('WARNING, unexpected **')
-                    name = f'**{name}**'
-                self.fh.write(f'{prefix}{name} ')
+                self.fh.write(f'{prefix}**{name}** ')
             else:
                 self.fh.write(f'{prefix}[{name}]({link}) ')
-        self.fh.write('\]\n\n')
+        self.fh.write('\n\n')
 
     def p(self, text: str):
         self.fh.write(f'{text}\n\n')
@@ -590,6 +634,9 @@ class PageBuilder:
     def pre(self, text: str):
         self.fh.write(f'<pre>\n{text.strip()}\n</pre>\n\n')
 
+    def warning(self, text):
+        self.fh.write(f'🟠 *Warning: {text}*\n\n')
+
 
 
 if __name__ == '__main__':
@@ -602,10 +649,16 @@ if __name__ == '__main__':
 
 '''
 
-🕵️‍♀️
+🕵️‍♀️ 🌍 🌎 🌏 👁
 
-🌍 🌎 🌏
+🔴🟠🟡🟢🔵🟣🟤⚫⚪🔘🛑⭕
 
-👁
+🟥🟧🟨🟩🟦🟪🟫⬛⬜🔲🔳⏹☑✅❎
+
+🔺🔻🔷🔶🔹🔸♦💠💎💧🧊
+
+🏴🏳🚩🏁
+
+◻️◼️◾️◽️▪️▫️
 
 '''

@@ -1,12 +1,11 @@
 import os
 import json
+from io import StringIO
 from pathlib import Path
 from random import choice
 from string import ascii_uppercase
 
-# import pandas as pd
-# import streamlit as st
-
+from git import Repo
 
 
 class FileSystemNode:
@@ -28,6 +27,8 @@ class FileSystemNode:
     def __str__(self):
         return f'<{self.__class__.__name__} "{self.name}">'
 
+
+## Streamlit utilities
 
 def st_list_files(component, header: str, file_names: list, cutoff: int = 5):
     """Display a list of file names in a Streamlit component, returns a selectbox
@@ -76,6 +77,17 @@ def st_display_branch(component, ANNOTATIONS):
     return component.selectbox('Branch in repository:', branch_names, index=index)
 
 
+# Style to supress printing the first column of a table
+style = """
+<style>
+thead tr th:first-child {display:none}
+tbody th {display:none}
+</style>
+"""
+
+
+## General utilities
+
 def read_file(filepath: Path):
     if filepath.is_file():
         with filepath.open() as fh:
@@ -99,11 +111,64 @@ def get_index(haystack: list, needle: str):
         return 0
 
 
+## Repository utilities
 
-# Style to supress printing the first column of a table
-style = """
-<style>
-thead tr th:first-child {display:none}
-tbody th {display:none}
-</style>
-"""
+class DirtyWorkingTreeWarning:
+
+    def __init__(self, repo: Repo, diffs: list):
+        self.commit = str(repo.head.commit)[:8]
+        dirname = Path(repo.working_tree_dir).name
+        self.message = f'some tracked files in repo "{dirname}"" were changed or deleted'
+        self.diffs = diffs
+        self.fatal = True
+
+    def __str__(self):
+        s = StringIO()
+        s.write(f'WARNING:{self.message}')
+        for diff in self.diffs:
+            s.write(f'\n{diff.change_type} {diff_path_name(diff)}')
+        return f'{s.getvalue()}'
+
+
+class UntrackedFilesWarning:
+
+    def __init__(self, repo: Repo):
+        directory = Path(repo.working_tree_dir).name
+        self.message = f'there are untracked files in repository "{directory}"'
+        self.fnames = repo.untracked_files
+        self.fatal = False
+
+    def __str__(self):
+        s = StringIO()
+        s.write(f'WARNING:{self.message}')
+        for fname in self.fnames:
+            s.write(f'\n{fname}')
+        return s.getvalue()
+
+
+def check_repository(repo: Repo) -> list:
+    """Check the repository to see whether tracked files were editted and whether
+    there are untracked files. Return a list of warning instances."""
+    # NOTE: could also use repo.is_dirty, but I want to make the distinction
+    warnings = []
+    diffs = repo.head.commit.diff(None)
+    if diffs:
+        warnings.append(DirtyWorkingTreeWarning(repo, diffs))
+    if repo.untracked_files:
+        warnings.append(UntrackedFilesWarning(repo))
+    return warnings
+
+
+def print_diff(diff):
+    print(f'{diff.change_type} {diff_path_name(diff)}')
+
+
+def diff_path_name(diff):
+    if diff.a_blob:
+        return diff.a_blob.path
+    elif diff.b_blob:
+        return diff.b_blob.path
+    else:
+        return None
+
+

@@ -90,6 +90,9 @@ class PredictionBatch(utils.FileSystemNode):
     def __str__(self):
         return f'<{self.__class__.__name__} {self.prediction_name} {self.prediction_batch}>'
 
+    def __len__(self):
+        return len(self.files)
+
     def file_names(self):
         return sorted(self.files)
 
