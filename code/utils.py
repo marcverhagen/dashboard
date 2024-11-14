@@ -39,7 +39,7 @@ def st_list_files(component, header: str, file_names: list, cutoff: int = 5):
             header, file_names, label_visibility='collapsed')
     else:
         return component.radio(
-            header, file_names, label_visibility='collapsed', format_func=identity)
+            header, file_names, label_visibility='collapsed', format_func=remove_at)
 
 
 def st_list_files2(component, task, cutoff: int = 5):
@@ -58,7 +58,7 @@ def st_list_files2(component, task, cutoff: int = 5):
             'file-list', amended_fnames, label_visibility='collapsed')
     else:
         return component.radio(
-            'file-list', amended_fnames, label_visibility='collapsed', format_func=identity)
+            'file-list', amended_fnames, label_visibility='collapsed', format_func=remove_at)
 
 
 def st_display_file(component, path: Path):
@@ -89,14 +89,16 @@ tbody th {display:none}
 ## General utilities
 
 def read_file(filepath: Path):
+    """Read a text file and return the content if it exists, otherwise return an
+    empty string."""
     if filepath.is_file():
         with filepath.open() as fh:
             return fh.read()
     return ''
 
 
-def identity(text: str):
-    # TODO: I am not happy with this name
+def remove_at(text: str):
+    """Replace the @ symbol in a string with an arrow."""
     return text.replace('@', ' ⟹ ')
 
 

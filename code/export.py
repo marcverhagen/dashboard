@@ -8,6 +8,8 @@ by hand, but it may in the future be done via GitHub actions).
 $ python export.py 
 $ python export.py --debug
 
+The mardown pages are written to ../docs/www.
+
 The code uses the local clones of the annotations and evaluations repositories.
 
 Make sure that you check out the branches (typically the main branch) that you
@@ -30,7 +32,7 @@ import pathlib
 
 import config
 import model
-from utils import identity, read_file, check_repository
+from utils import remove_at, read_file, check_repository
 
 
 DEBUG = False
@@ -40,10 +42,6 @@ MODEL = model.Data(config.ANNOTATIONS, config.EVALUATIONS)
 ANNOTATIONS = MODEL.annotations
 EVALUATIONS = MODEL.evaluations
 
-ANNOTATIONS_REPO_URL = 'https://github.com/clamsproject/aapb-annotations'
-EVALUATIONS_REPO_URL = 'https://github.com/clamsproject/aapb-evaluations'
-DASHBOARD_REPO_URL = 'https://github.com/clamsproject/dashboard'
-
 ANNOTATIONS_WARNINGS = check_repository(ANNOTATIONS.repo)
 EVALUATIONS_WARNINGS = check_repository(EVALUATIONS.repo)
 
@@ -51,8 +49,8 @@ ANNOTATIONS_COMMIT = ANNOTATIONS.repo.head.commit.hexsha
 EVALUATIONS_COMMIT = EVALUATIONS.repo.head.commit.hexsha
 ANNOTATIONS_COMMIT_SHORT = ANNOTATIONS.repo.git.rev_parse(ANNOTATIONS_COMMIT, short=8)
 EVALUATIONS_COMMIT_SHORT = EVALUATIONS.repo.git.rev_parse(EVALUATIONS_COMMIT, short=8)
-ANNOTATIONS_TREE = f'{ANNOTATIONS_REPO_URL}/tree/{ANNOTATIONS_COMMIT}'
-EVALUATIONS_TREE = f'{EVALUATIONS_REPO_URL}/tree/{EVALUATIONS_COMMIT}'
+ANNOTATIONS_TREE = f'{config.ANNOTATIONS_REPO_URL}/tree/{ANNOTATIONS_COMMIT}'
+EVALUATIONS_TREE = f'{config.EVALUATIONS_REPO_URL}/tree/{EVALUATIONS_COMMIT}'
 ANNOTATIONS_BRANCH = ANNOTATIONS.repo.head.reference
 EVALUATIONS_BRANCH = EVALUATIONS.repo.head.reference
 
@@ -214,8 +212,8 @@ class SiteBuilder():
             pb.write('- 🕵️‍♀️ [Annotation Tasks](tasks/index.md)\n')
             pb.write('- 🕵️‍♀️ [Evaluations](evaluations/index.md)\n\n')
             pb.p('The homepages for the repositories are available at:')
-            pb.write(f'- 🏠 [{ANNOTATIONS_REPO_URL}]({ANNOTATIONS_REPO_URL})\n')
-            pb.write(f'- 🏠 [{EVALUATIONS_REPO_URL}]({EVALUATIONS_REPO_URL})\n\n')
+            pb.write(f'- 🏠 [{config.ANNOTATIONS_REPO_URL}]({config.ANNOTATIONS_REPO_URL})\n')
+            pb.write(f'- 🏠 [{config.EVALUATIONS_REPO_URL}]({config.EVALUATIONS_REPO_URL})\n\n')
             pb.p('It is a good idea to look at the README.md files in those '
                  'repositories.')
             pb.p('Repository versions that were used for this dashboard:\n')
@@ -223,7 +221,7 @@ class SiteBuilder():
             for commit, branch, dirname in self.info:
                 pb.table_row([pathlib.Path(dirname).name, commit, branch])
             pb.p('\nThe code for this dashboard is maintained at'
-                 f' [{DASHBOARD_REPO_URL}]({DASHBOARD_REPO_URL}).')
+                 f' [{config.DASHBOARD_REPO_URL}]({config.DASHBOARD_REPO_URL}).')
 
     def batches(self):
         # Building /batches
@@ -536,7 +534,7 @@ class SiteBuilder():
                 subpages('evaluations/evaluation/predictions', 'reports'))
             for report in evaluation.reports:
                 url = f'{EVALUATIONS_TREE}/{evaluation.name}/{report.name}'
-                pb.p(f'**{identity(report.name)}** ([view on GitHub]({url}))')
+                pb.p(f'**{remove_at(report.name)}** ([view on GitHub]({url}))')
                 batch_name = report.report_batch
                 if batch_name not in ANNOTATIONS.batch_names:
                     pb.warning(f'batch {batch_name} does not exist')

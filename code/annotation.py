@@ -1,5 +1,4 @@
 
-import os
 import re
 import json
 from io import StringIO
@@ -15,12 +14,12 @@ import config
 Comparison = namedtuple('Comparison', ['in_both', 'in_first', 'in_second'])
 
 
-class Repository:
+class Repository(utils.FileSystemNode):
 
     """Class to give access to data in the annotation repository."""
 
     def __init__(self, directory: str):
-        self.path = Path(directory)
+        super().__init__(Path(directory))
         self.repo = Repo(directory)
         self.load()
 
@@ -59,15 +58,20 @@ class Repository:
         print(f'\n{self}')
         print(f'\nActive branch:\n    {self.repo.active_branch}')
         print('\nBatches:')
-        for batch in self._batches:
+        for batch in self.batches:
             print('   ', batch)
         print('\nTasks:')
-        for task in self._tasks:
+        for task in self.tasks:
             print('   ', task)
         print()
 
 
 class Batch(utils.FileSystemNode):
+
+    """A Batch is created from a single file in the batches subdirectory of the
+    annotations repository. It includes a list of files referred to in the batch
+    as well as the full batch file content. It also seprates out the batch-level
+    comment at the top of the batch file."""
 
     def __init__(self, path: Path):
         super().__init__(path)
@@ -86,8 +90,7 @@ class Batch(utils.FileSystemNode):
         if self._comment is None:
             comment = StringIO()
             separator_count = 0
-            lines = self.content.split('\n')
-            for line in lines:
+            for line in self.content.split('\n'):
                 if '-' * 50 in line:
                     separator_count += 1
                     if separator_count == 2:
@@ -207,7 +210,6 @@ def test_print_gold_files():
 if __name__ == '__main__':
 
     repo = Repository(config.ANNOTATIONS)
-    repo.checkout('85-timeframes')
     repo.pp()
 
     task = repo.task('scene-recognition')

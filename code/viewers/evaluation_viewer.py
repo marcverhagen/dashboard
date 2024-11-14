@@ -66,7 +66,7 @@ def viewer(MODEL):
         if report is not None:
             # TODO: could now use the Report object for this
             report_obj = evaluation.report(report)
-            report_name = utils.identity(report_obj.name)
+            report_name = utils.remove_at(report_obj.name)
             report_batch = report_obj.report_batch
             reports_tab.info(f'Report **{report_name}**')
             if report_batch not in ANNOTATIONS.batch_names:

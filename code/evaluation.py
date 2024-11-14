@@ -1,9 +1,8 @@
 
 from pathlib import Path
+from git import Repo
 import config
 import utils
-
-from git import Repo
 
 
 class Repository(utils.FileSystemNode):
@@ -13,19 +12,30 @@ class Repository(utils.FileSystemNode):
     def __init__(self, directory: str):
         super().__init__(Path(directory))
         self.repo = Repo(directory)
-        self.readme = Path(self.path / 'README.md').open().read()
-        self.evaluations_idx = { p.stem: Evaluation(p) for p in self.eval_directories() }
-        self.evaluations = sorted(self.evaluations_idx.values())
-        self.evaluation_names = sorted(self.evaluations_idx.keys())
+        self.load()
 
     def __getitem__(self, index: int):
         return self.evaluations[index]
 
-    def eval_directories(self):
+    def load(self):
+        self.readme = Path(self.path / 'README.md').open().read()
+        self.evaluations_idx = { p.stem: Evaluation(p) for p in self.eval_directories() }
+        self.evaluations = sorted(self.evaluations_idx.values())
+        self.evaluation_names = sorted(self.evaluations_idx.keys())
+        self.branches = { str(branch): branch for branch in self.repo.branches }
+        self.branch_names = [ str(branch) for branch in self.repo.branches ]
+
+    def eval_directories(self) -> list:
+        """Returns the Paths of all evaluation directories."""
         return [ p for p in self.path.iterdir() if p.name.endswith('eval') and p.is_dir()]
 
-    def evaluation(self, name: str):
+    def evaluation(self, name: str) -> 'Evaluation':
         return self.evaluations_idx.get(name)
+
+    def checkout(self, branch: str):
+        self.branches[branch].checkout()
+        self.load()
+
 
 
 class Evaluation(utils.FileSystemNode):
